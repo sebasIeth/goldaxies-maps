@@ -1,0 +1,102 @@
+[
+  {
+    "id": "1",
+    "name": "Café Crypto Bello",
+    "type": "Cafetería",
+    "description": "Café de especialidad en el corazón de Bello. Acepta pagos con token y tiene WiFi de alta velocidad.",
+    "address": "Calle 45 con Carrera 55, Salento, Bello",
+    "lat": 6.3388,
+    "lng": -75.5595,
+    "logo": "/logos/cafe.svg"
+  },
+  {
+    "id": "2",
+    "name": "TechStore Suárez",
+    "type": "Electrónica",
+    "description": "Tienda de tecnología y accesorios cerca al parque de Bello. 5% de descuento pagando con token.",
+    "address": "Calle 50 con Carrera 50, Suárez, Bello",
+    "lat": 6.3420,
+    "lng": -75.5510,
+    "logo": "/logos/tech.svg"
+  },
+  {
+    "id": "3",
+    "name": "Mercado Natural Bello",
+    "type": "Supermercado",
+    "description": "Productos orgánicos y naturales. Aceptamos token para todas las compras.",
+    "address": "Carrera 55 con Calle 47, Rincón Santo, Bello",
+    "lat": 6.3405,
+    "lng": -75.5530,
+    "logo": "/logos/market.svg"
+  },
+  {
+    "id": "4",
+    "name": "Moda DeFi",
+    "type": "Indumentaria",
+    "description": "Moda urbana y streetwear. Colección exclusiva crypto-themed en la zona de Manchester.",
+    "address": "Carrera 50 con Calle 48, Manchester, Bello",
+    "lat": 6.3415,
+    "lng": -75.5485,
+    "logo": "/logos/fashion.svg"
+  },
+  {
+    "id": "5",
+    "name": "Farmacia Web3 Puerto Bello",
+    "type": "Farmacia",
+    "description": "Farmacia 24 horas en Puerto Bello. Pagá con token y acumulá beneficios.",
+    "address": "Calle 44 con Carrera 52, Puerto Bello, Bello",
+    "lat": 6.3365,
+    "lng": -75.5460,
+    "logo": "/logos/pharmacy.svg"
+  },
+  {
+    "id": "6",
+    "name": "Gym Token Bello",
+    "type": "Gimnasio",
+    "description": "Gimnasio y centro de fitness cerca a la Universidad San Buenaventura. Membresías pagables con token.",
+    "address": "Calle 48 con Carrera 58, Espíritu Santo, Bello",
+    "lat": 6.3410,
+    "lng": -75.5640,
+    "logo": "/logos/gym.svg"
+  },
+  {
+    "id": "7",
+    "name": "Papelería Blockchain",
+    "type": "Papelería",
+    "description": "Todo en útiles escolares y de oficina. Impresiones y fotocopias con pago en token.",
+    "address": "Calle 43 con Carrera 58B, Salento, Bello",
+    "lat": 6.3375,
+    "lng": -75.5610,
+    "logo": "/logos/tech.svg"
+  },
+  {
+    "id": "8",
+    "name": "Restaurante Satoshi",
+    "type": "Restaurante",
+    "description": "Comida colombiana tradicional. Almuerzos ejecutivos y corrientazos pagables con token.",
+    "address": "Carrera 56 con Calle 46, Salento, Bello",
+    "lat": 6.3395,
+    "lng": -75.5575,
+    "logo": "/logos/restaurant.svg"
+  },
+  {
+    "id": "9",
+    "name": "Peluquería CryptoStyle",
+    "type": "Peluquería",
+    "description": "Cortes, tintes y tratamientos capilares. Acepta token para todos los servicios.",
+    "address": "Calle 40 con Carrera 55, Fabricato, Bello",
+    "lat": 6.3330,
+    "lng": -75.5500,
+    "logo": "/logos/barber.svg"
+  },
+  {
+    "id": "10",
+    "name": "Tienda Naturista Piamonte",
+    "type": "Tienda naturista",
+    "description": "Productos naturales y suplementos cerca a la Reserva Natural Piamonte.",
+    "address": "Calle 40 con Carrera 59, Piamonte, Bello",
+    "lat": 6.3345,
+    "lng": -75.5630,
+    "logo": "/logos/naturist.svg"
+  }
+]
