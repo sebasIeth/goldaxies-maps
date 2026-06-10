@@ -33,8 +33,8 @@ export default function CommerceCard({
   onClose,
 }: Props) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[1000] animate-slide-up">
-      <div className="mx-auto max-w-lg bg-[#141414] border-t border-[#2A2A2A] rounded-t-2xl shadow-2xl overflow-hidden">
+    <div className="fixed top-0 left-0 right-0 z-[1000] p-3 pt-[env(safe-area-inset-top,12px)]">
+      <div className="mx-auto max-w-lg bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <div className="flex items-center gap-3">
@@ -87,7 +87,7 @@ export default function CommerceCard({
         )}
 
         {/* CTA */}
-        <div className="px-4 pb-5 pt-1">
+        <div className="px-4 pb-4 pt-1">
           {hasUserPos ? (
             <button
               onClick={onNavigate}
