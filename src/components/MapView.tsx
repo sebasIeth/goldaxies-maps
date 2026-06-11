@@ -107,40 +107,40 @@ export default function MapView() {
       return;
     }
 
-    // Safari iOS requiere HTTPS para geolocalización.
-    // En localhost se permite, pero en red local no.
-    const isSecure =
-      location.protocol === "https:" ||
-      location.hostname === "localhost" ||
-      location.hostname === "127.0.0.1";
+    setGeoError(null);
 
-    if (!isSecure) {
-      setGeoError("La ubicación requiere conexión segura (HTTPS)");
-      return;
-    }
-
-    // Primero intentar getCurrentPosition (más confiable en Safari iOS)
-    // y luego iniciar watchPosition para actualizaciones continuas
+    // Safari iOS: intentar primero con baja precisión (más rápido, no falla tanto)
+    // y después refinar con alta precisión
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setUserPos([p.coords.latitude, p.coords.longitude]);
-        // Una vez obtenida la primera posición, iniciar watch
+
+        // Refinar con alta precisión en segundo plano
         watchRef.current = navigator.geolocation.watchPosition(
           (wp) => setUserPos([wp.coords.latitude, wp.coords.longitude]),
-          () => {}, // Ignorar errores del watch ya que tenemos posición
-          { enableHighAccuracy: true, timeout: 30000, maximumAge: 60000 }
+          () => {},
+          { enableHighAccuracy: true, timeout: 60000, maximumAge: 30000 }
         );
       },
       (err) => {
-        if (err.code === 1) {
-          setGeoError("Permiso de ubicación denegado. Activalo en Ajustes > Safari");
-        } else if (err.code === 2) {
-          setGeoError("No se pudo determinar tu ubicación. ¿Tenés el GPS activado?");
-        } else {
-          setGeoError("La ubicación tardó demasiado. Intentá de nuevo.");
-        }
+        // Fallback: si falla sin alta precisión, intentar CON alta precisión
+        navigator.geolocation.getCurrentPosition(
+          (p) => {
+            setUserPos([p.coords.latitude, p.coords.longitude]);
+          },
+          (err2) => {
+            if (err2.code === 1 || err.code === 1) {
+              setGeoError("Permiso denegado. En iPhone: Ajustes → Safari → Ubicación → Permitir");
+            } else if (err2.code === 2 || err.code === 2) {
+              setGeoError("No se pudo obtener la ubicación. ¿Tenés el GPS activado?");
+            } else {
+              setGeoError("La ubicación tardó demasiado. Intentá de nuevo.");
+            }
+          },
+          { enableHighAccuracy: true, timeout: 60000, maximumAge: 120000 }
+        );
       },
-      { enableHighAccuracy: true, timeout: 30000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 120000 }
     );
   }
 

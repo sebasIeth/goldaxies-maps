@@ -8,7 +8,7 @@ interface Props {
 export default function LocationPermission({ onAllow, onDeny }: Props) {
   return (
     <div className="fixed inset-0 z-[2000] bg-[#0A0A0A]/95 flex items-end sm:items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6 space-y-5 animate-slide-up">
+      <div className="w-full max-w-sm bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6 space-y-5">
         <div className="text-center">
           <img src="/goldaxis-logo.png" alt="GoldAxis" className="w-14 h-14 mx-auto mb-1 object-contain" />
           <h2 className="text-lg font-bold text-white">Ubicación</h2>
