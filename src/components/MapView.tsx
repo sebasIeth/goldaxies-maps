@@ -106,10 +106,41 @@ export default function MapView() {
       setGeoError("Tu navegador no soporta geolocalización");
       return;
     }
-    watchRef.current = navigator.geolocation.watchPosition(
-      (p) => setUserPos([p.coords.latitude, p.coords.longitude]),
-      () => setGeoError("No pudimos acceder a tu ubicación"),
-      { enableHighAccuracy: true, timeout: 10000 }
+
+    // Safari iOS requiere HTTPS para geolocalización.
+    // En localhost se permite, pero en red local no.
+    const isSecure =
+      location.protocol === "https:" ||
+      location.hostname === "localhost" ||
+      location.hostname === "127.0.0.1";
+
+    if (!isSecure) {
+      setGeoError("La ubicación requiere conexión segura (HTTPS)");
+      return;
+    }
+
+    // Primero intentar getCurrentPosition (más confiable en Safari iOS)
+    // y luego iniciar watchPosition para actualizaciones continuas
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        setUserPos([p.coords.latitude, p.coords.longitude]);
+        // Una vez obtenida la primera posición, iniciar watch
+        watchRef.current = navigator.geolocation.watchPosition(
+          (wp) => setUserPos([wp.coords.latitude, wp.coords.longitude]),
+          () => {}, // Ignorar errores del watch ya que tenemos posición
+          { enableHighAccuracy: true, timeout: 30000, maximumAge: 60000 }
+        );
+      },
+      (err) => {
+        if (err.code === 1) {
+          setGeoError("Permiso de ubicación denegado. Activalo en Ajustes > Safari");
+        } else if (err.code === 2) {
+          setGeoError("No se pudo determinar tu ubicación. ¿Tenés el GPS activado?");
+        } else {
+          setGeoError("La ubicación tardó demasiado. Intentá de nuevo.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 60000 }
     );
   }
 
@@ -165,8 +196,17 @@ export default function MapView() {
 
       {/* Geo error */}
       {geoError && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-[#141414] border border-[#D4AF37]/30 text-[#D4AF37] px-4 py-2 rounded-xl text-xs shadow-lg">
-          {geoError}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-[#141414] border border-[#D4AF37]/30 text-[#D4AF37] px-4 py-2.5 rounded-xl text-xs shadow-lg flex items-center gap-3">
+          <span>{geoError}</span>
+          <button
+            onClick={() => {
+              setGeoError(null);
+              startGeolocation();
+            }}
+            className="px-2.5 py-1 bg-[#D4AF37] text-black font-semibold rounded-lg text-[10px] hover:bg-[#E5C04B] transition-colors whitespace-nowrap"
+          >
+            Reintentar
+          </button>
         </div>
       )}
 

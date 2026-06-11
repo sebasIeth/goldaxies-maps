@@ -48,8 +48,16 @@ export async function POST(req: NextRequest) {
   }
 
   // Buscar admin en MongoDB
-  const db = await getDb();
-  const admin = await db.collection("admins").findOne({ email: email.toLowerCase().trim() });
+  let db, admin;
+  try {
+    db = await getDb();
+    admin = await db.collection("admins").findOne({ email: email.toLowerCase().trim() });
+  } catch {
+    return Response.json(
+      { error: "Error de conexión con la base de datos. Verificá tu IP en MongoDB Atlas." },
+      { status: 503 }
+    );
+  }
 
   if (!admin) {
     return Response.json({ error: "Credenciales inválidas" }, { status: 401 });

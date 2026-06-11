@@ -28,11 +28,18 @@ function LoginForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
-    const data = await res.json();
     setLoading(false);
 
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      setError("Error de conexión con el servidor. Intentá de nuevo.");
+      return;
+    }
+
     if (!res.ok) {
-      setError(data.error);
+      setError(data.error || "Error del servidor");
       return;
     }
 
