@@ -9,6 +9,7 @@ const COOKIE_NAME = "goldaxis-session";
 
 export interface SessionPayload {
   email: string;
+  name: string;
   twoFactorVerified: boolean;
 }
 

@@ -1,26 +1,36 @@
 import { NextRequest } from "next/server";
 import { verifyToken, createToken, setSessionCookie } from "@/lib/auth/jwt";
-import { createTOTP, getTOTPSecret, saveTOTPSecret, verifyTOTPCode } from "@/lib/auth/totp";
+import { createTOTP, verifyTOTPCode } from "@/lib/auth/totp";
+import { getDb } from "@/lib/mongodb";
 import QRCode from "qrcode";
 
-// GET: genera QR y secreto temporal
+// POST: genera QR y secreto temporal
 export async function POST() {
   const session = await verifyToken();
   if (!session) {
     return Response.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const existing = await getTOTPSecret();
-  if (existing) {
+  const db = await getDb();
+  const admin = await db.collection("admins").findOne({ email: session.email });
+
+  if (!admin) {
+    return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+  }
+
+  if (admin.totpSecret) {
     return Response.json({ error: "2FA ya está configurado" }, { status: 400 });
   }
 
-  const totp = createTOTP();
+  const totp = createTOTP(undefined, session.email);
   const secret = totp.secret.base32;
   const uri = totp.toString();
 
-  // Guardar el secreto inmediatamente (necesario para verificar)
-  await saveTOTPSecret(secret);
+  // Guardar el secreto en MongoDB para este usuario
+  await db.collection("admins").updateOne(
+    { email: session.email },
+    { $set: { totpSecret: secret } }
+  );
 
   const qrDataUrl = await QRCode.toDataURL(uri, {
     width: 256,
@@ -44,12 +54,14 @@ export async function PUT(req: NextRequest) {
     return Response.json({ error: "Código requerido" }, { status: 400 });
   }
 
-  const secret = await getTOTPSecret();
-  if (!secret) {
+  const db = await getDb();
+  const admin = await db.collection("admins").findOne({ email: session.email });
+
+  if (!admin?.totpSecret) {
     return Response.json({ error: "2FA no configurado" }, { status: 400 });
   }
 
-  const valid = verifyTOTPCode(secret, code);
+  const valid = verifyTOTPCode(admin.totpSecret, code);
   if (!valid) {
     return Response.json({ error: "Código inválido. Escaneá el QR de nuevo." }, { status: 401 });
   }
@@ -57,6 +69,7 @@ export async function PUT(req: NextRequest) {
   // Código correcto → dar acceso completo
   const token = await createToken({
     email: session.email,
+    name: session.name,
     twoFactorVerified: true,
   });
   await setSessionCookie(token);

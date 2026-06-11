@@ -1,9 +1,7 @@
 import { NextRequest } from "next/server";
 import { createToken, setSessionCookie } from "@/lib/auth/jwt";
-import { getTOTPSecret } from "@/lib/auth/totp";
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@goldaxis.com";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "GoldAxis2024!";
+import { getDb } from "@/lib/mongodb";
+import bcrypt from "bcryptjs";
 
 // Rate limiting simple en memoria
 const attempts = new Map<string, { count: number; lastAttempt: number }>();
@@ -49,30 +47,36 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Email y contraseña son requeridos" }, { status: 400 });
   }
 
-  // Comparación en tiempo constante para evitar timing attacks
-  const emailMatch = email.length === ADMIN_EMAIL.length && email === ADMIN_EMAIL;
-  const passMatch = password.length === ADMIN_PASSWORD.length && password === ADMIN_PASSWORD;
+  // Buscar admin en MongoDB
+  const db = await getDb();
+  const admin = await db.collection("admins").findOne({ email: email.toLowerCase().trim() });
 
-  if (!emailMatch || !passMatch) {
+  if (!admin) {
+    return Response.json({ error: "Credenciales inválidas" }, { status: 401 });
+  }
+
+  const passMatch = await bcrypt.compare(password, admin.passwordHash);
+  if (!passMatch) {
     return Response.json({ error: "Credenciales inválidas" }, { status: 401 });
   }
 
   // Login exitoso → limpiar intentos
   clearAttempts(ip);
 
-  const totpSecret = await getTOTPSecret();
-  const has2FA = !!totpSecret;
+  const has2FA = !!admin.totpSecret;
 
   // SIEMPRE crear token con twoFactorVerified=false
   // El usuario DEBE pasar por 2FA (setup o verify) para entrar al admin
   const token = await createToken({
-    email,
+    email: admin.email,
+    name: admin.name,
     twoFactorVerified: false,
   });
   await setSessionCookie(token);
 
   return Response.json({
     success: true,
+    name: admin.name,
     needs2FA: has2FA,
     needsSetup2FA: !has2FA,
   });
