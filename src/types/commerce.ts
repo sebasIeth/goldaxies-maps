@@ -7,5 +7,6 @@ export interface Commerce {
   lat: number;
   lng: number;
   logo: string;
+  phone?: string;
   image?: string;
 }

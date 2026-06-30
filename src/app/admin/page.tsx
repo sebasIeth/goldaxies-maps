@@ -42,6 +42,8 @@ const t = {
     selectCategory: "Select a category...",
     description: "Description",
     descriptionPlaceholder: "What does this commerce offer? Any token benefits?",
+    phone: "Phone number",
+    phonePlaceholder: "e.g. +1 555 123 4567",
     address: "Address",
     coordinates: "Coordinates",
     icon: "Icon",
@@ -111,6 +113,8 @@ const t = {
     selectCategory: "Selecciona una categoria...",
     description: "Descripcion",
     descriptionPlaceholder: "Que ofrece este comercio? Algun beneficio con token?",
+    phone: "Numero de telefono",
+    phonePlaceholder: "Ej: +57 300 123 4567",
     address: "Direccion",
     coordinates: "Coordenadas",
     icon: "Icono",
@@ -191,6 +195,7 @@ const EMPTY_FORM = {
   name: "",
   type: "Cafe",
   description: "",
+  phone: "",
   address: "",
   lat: "",
   lng: "",
@@ -327,7 +332,7 @@ export default function AdminPage() {
   function handleEdit(c: Commerce) {
     setEditingId(c.id);
     setForm({
-      name: c.name, type: c.type, description: c.description,
+      name: c.name, type: c.type, description: c.description, phone: c.phone || "",
       address: c.address, lat: c.lat.toString(), lng: c.lng.toString(), logo: c.logo,
     });
     setShowForm(true);
@@ -660,6 +665,13 @@ export default function AdminPage() {
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.description}</label>
                     <textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder={l.descriptionPlaceholder} className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none resize-none transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.phone}</label>
+                    <div className="relative">
+                      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                      <input type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder={l.phonePlaceholder} className="w-full pl-9 pr-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none transition-all" />
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.address}</label>
