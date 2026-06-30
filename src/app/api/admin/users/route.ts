@@ -59,6 +59,29 @@ export async function POST(req: NextRequest) {
   return Response.json({ success: true });
 }
 
+export async function PATCH(req: NextRequest) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
+
+  const { email, role } = await req.json();
+
+  if (!email || !role || !["admin", "superadmin"].includes(role)) {
+    return Response.json({ error: "Email and valid role required" }, { status: 400 });
+  }
+
+  const db = await getDb();
+  const result = await db.collection("admins").updateOne(
+    { email: email.toLowerCase().trim() },
+    { $set: { role } }
+  );
+
+  if (result.matchedCount === 0) {
+    return Response.json({ error: "User not found" }, { status: 404 });
+  }
+
+  return Response.json({ success: true });
+}
+
 export async function DELETE(req: NextRequest) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
