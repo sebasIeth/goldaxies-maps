@@ -17,8 +17,8 @@ import CommerceList from "./CommerceList";
 import LocationPermission from "./LocationPermission";
 import "leaflet/dist/leaflet.css";
 
-const DEFAULT_CENTER: [number, number] = [6.3375, -75.5565];
-const DEFAULT_ZOOM = 15;
+const DEFAULT_CENTER: [number, number] = [4.6, -74.08];
+const DEFAULT_ZOOM = 5;
 const STORAGE_KEY = "goldaxis-user-location";
 
 /* ── Dark premium map tiles ── */
@@ -81,9 +81,13 @@ function FlyToUser({ pos, hasRoute }: { pos: [number, number] | null; hasRoute: 
   const map = useMap();
   const [flown, setFlown] = useState(false);
   useEffect(() => {
-    if (pos && !flown && !hasRoute) {
-      map.flyTo(pos, 15, { duration: 1.5 });
-      setFlown(true);
+    if (pos && !hasRoute) {
+      if (!flown) {
+        map.setView(pos, 15);
+        setFlown(true);
+      } else {
+        map.flyTo(pos, 15, { duration: 1.5 });
+      }
     }
   }, [pos, map, hasRoute, flown]);
   return null;
