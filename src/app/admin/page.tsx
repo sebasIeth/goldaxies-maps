@@ -176,6 +176,7 @@ export default function AdminPage() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [sessionEmail, setSessionEmail] = useState("");
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [showUserForm, setShowUserForm] = useState(false);
   const [userForm, setUserForm] = useState(EMPTY_USER_FORM);
@@ -202,6 +203,7 @@ export default function AdminPage() {
       if (res.ok) {
         const data = await res.json();
         setIsSuperAdmin(data.role === "superadmin");
+        setSessionEmail(data.email);
       }
     } catch {}
   }, []);
@@ -672,14 +674,16 @@ export default function AdminPage() {
                         </div>
                         <p className="text-[11px] text-gray-600 mt-0.5">{u.email}</p>
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <button onClick={() => handleToggleRole(u.email, u.role)} className={`p-2 rounded-lg transition-all ${u.role === "superadmin" ? "text-[#D4AF37] hover:text-orange-400 hover:bg-orange-400/5" : "text-gray-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"}`} title={u.role === "superadmin" ? "Demote to Admin" : "Promote to Super Admin"}>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={u.role === "superadmin" ? "M19 14l-7 7m0 0l-7-7m7 7V3" : "M5 10l7-7m0 0l7 7m-7-7v18"} /></svg>
-                        </button>
-                        <button onClick={() => handleDeleteUser(u.email)} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/5 rounded-lg transition-all">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      </div>
+                      {u.email !== sessionEmail && (
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          <button onClick={() => handleToggleRole(u.email, u.role)} className={`p-2 rounded-lg transition-all ${u.role === "superadmin" ? "text-[#D4AF37] hover:text-orange-400 hover:bg-orange-400/5" : "text-gray-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"}`} title={u.role === "superadmin" ? l.demoteConfirm : l.promoteConfirm}>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={u.role === "superadmin" ? "M19 14l-7 7m0 0l-7-7m7 7V3" : "M5 10l7-7m0 0l7 7m-7-7v18"} /></svg>
+                          </button>
+                          <button onClick={() => handleDeleteUser(u.email)} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/5 rounded-lg transition-all">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
