@@ -476,7 +476,7 @@ export default function AdminPage() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.address}</label>
-                    <AddressSearch value={form.address} onSelect={(address, lat, lng) => setForm((f) => ({ ...f, address, lat: lat.toString(), lng: lng.toString() }))} />
+                    <AddressSearch value={form.address} onSelect={(address, lat, lng) => setForm((f) => ({ ...f, address, lat: lat.toString(), lng: lng.toString() }))} showCountrySelect />
                     {form.lat && form.lng && (
                       <div className="flex items-center gap-1.5 mt-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
