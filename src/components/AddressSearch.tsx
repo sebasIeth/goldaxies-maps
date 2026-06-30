@@ -23,6 +23,7 @@ const COUNTRIES = [
   { code: "pr", name: "Puerto Rico", flag: "🇵🇷" },
   { code: "uy", name: "Uruguay", flag: "🇺🇾" },
   { code: "ve", name: "Venezuela", flag: "🇻🇪" },
+  { code: "us", name: "United States", flag: "🇺🇸" },
 ];
 
 interface NominatimResult {
