@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 
 const COUNTRIES = [
+  { code: "us", name: "United States", flag: "🇺🇸" },
   { code: "ar", name: "Argentina", flag: "🇦🇷" },
   { code: "bo", name: "Bolivia", flag: "🇧🇴" },
   { code: "br", name: "Brasil", flag: "🇧🇷" },
@@ -23,7 +24,6 @@ const COUNTRIES = [
   { code: "pr", name: "Puerto Rico", flag: "🇵🇷" },
   { code: "uy", name: "Uruguay", flag: "🇺🇾" },
   { code: "ve", name: "Venezuela", flag: "🇻🇪" },
-  { code: "us", name: "United States", flag: "🇺🇸" },
 ];
 
 interface NominatimResult {
@@ -44,7 +44,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [country, setCountry] = useState("ar");
+  const [country, setCountry] = useState("us");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
