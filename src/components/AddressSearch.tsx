@@ -2,6 +2,29 @@
 
 import { useState, useRef, useEffect } from "react";
 
+const COUNTRIES = [
+  { code: "ar", name: "Argentina", flag: "🇦🇷" },
+  { code: "bo", name: "Bolivia", flag: "🇧🇴" },
+  { code: "br", name: "Brasil", flag: "🇧🇷" },
+  { code: "cl", name: "Chile", flag: "🇨🇱" },
+  { code: "co", name: "Colombia", flag: "🇨🇴" },
+  { code: "cr", name: "Costa Rica", flag: "🇨🇷" },
+  { code: "cu", name: "Cuba", flag: "🇨🇺" },
+  { code: "do", name: "Rep. Dominicana", flag: "🇩🇴" },
+  { code: "ec", name: "Ecuador", flag: "🇪🇨" },
+  { code: "sv", name: "El Salvador", flag: "🇸🇻" },
+  { code: "gt", name: "Guatemala", flag: "🇬🇹" },
+  { code: "hn", name: "Honduras", flag: "🇭🇳" },
+  { code: "mx", name: "Mexico", flag: "🇲🇽" },
+  { code: "ni", name: "Nicaragua", flag: "🇳🇮" },
+  { code: "pa", name: "Panama", flag: "🇵🇦" },
+  { code: "py", name: "Paraguay", flag: "🇵🇾" },
+  { code: "pe", name: "Peru", flag: "🇵🇪" },
+  { code: "pr", name: "Puerto Rico", flag: "🇵🇷" },
+  { code: "uy", name: "Uruguay", flag: "🇺🇾" },
+  { code: "ve", name: "Venezuela", flag: "🇻🇪" },
+];
+
 interface NominatimResult {
   place_id: number;
   display_name: string;
@@ -12,22 +35,22 @@ interface NominatimResult {
 interface Props {
   value: string;
   onSelect: (address: string, lat: number, lng: number) => void;
+  showCountrySelect?: boolean;
 }
 
-export default function AddressSearch({ value, onSelect }: Props) {
+export default function AddressSearch({ value, onSelect, showCountrySelect = false }: Props) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [country, setCountry] = useState("ar");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Sync external value
   useEffect(() => {
     setQuery(value);
   }, [value]);
 
-  // Close on click outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -52,6 +75,9 @@ export default function AddressSearch({ value, onSelect }: Props) {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
+        const codes = showCountrySelect
+          ? country
+          : "ar,bo,br,cl,co,cr,cu,do,ec,sv,gt,hn,mx,ni,pa,py,pe,pr,uy,ve";
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?` +
             new URLSearchParams({
@@ -59,7 +85,7 @@ export default function AddressSearch({ value, onSelect }: Props) {
               format: "json",
               addressdetails: "1",
               limit: "5",
-              countrycodes: "ar,bo,br,cl,co,cr,cu,do,ec,sv,gt,hn,mx,ni,pa,py,pe,pr,uy,ve",
+              countrycodes: codes,
             }),
           {
             headers: { "Accept-Language": "es" },
@@ -84,8 +110,35 @@ export default function AddressSearch({ value, onSelect }: Props) {
     onSelect(shortAddress, parseFloat(r.lat), parseFloat(r.lon));
   }
 
+  function handleCountryChange(code: string) {
+    setCountry(code);
+    setQuery("");
+    setResults([]);
+    setOpen(false);
+  }
+
+  const selectedCountry = COUNTRIES.find((c) => c.code === country);
+
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative space-y-2">
+      {showCountrySelect && (
+        <div className="relative">
+          <select
+            value={country}
+            onChange={(e) => handleCountryChange(e.target.value)}
+            className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-sm focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none appearance-none cursor-pointer"
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.flag}  {c.name}
+              </option>
+            ))}
+          </select>
+          <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      )}
       <div className="relative">
         <svg
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600"
@@ -105,7 +158,7 @@ export default function AddressSearch({ value, onSelect }: Props) {
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Buscar dirección... Ej: Calle 45 Bello Antioquia"
+          placeholder={showCountrySelect && selectedCountry ? `Search in ${selectedCountry.name}...` : "Search address..."}
           className="w-full pl-9 pr-10 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none"
         />
         {loading && (
