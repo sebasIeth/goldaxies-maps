@@ -93,6 +93,16 @@ function FlyToUser({ pos, hasRoute }: { pos: [number, number] | null; hasRoute: 
   return null;
 }
 
+function GoHome({ pos, trigger }: { pos: [number, number] | null; trigger: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (pos && trigger > 0) {
+      map.flyTo(pos, 16, { duration: 1 });
+    }
+  }, [trigger, pos, map]);
+  return null;
+}
+
 /* ── localStorage helpers ── */
 function getSavedLocation(): { lat: number; lng: number; address: string } | null {
   try {
@@ -119,6 +129,7 @@ export default function MapView() {
   const [commerces, setCommerces] = useState<Commerce[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [ready, setReady] = useState(false);
+  const [goHomeTrigger, setGoHomeTrigger] = useState(0);
 
   // Check localStorage on mount
   useEffect(() => {
@@ -203,18 +214,28 @@ export default function MapView() {
         </div>
       )}
 
-      {/* Change location button */}
+      {/* Home & change location */}
       {userAddress && !showOnboarding && (
-        <button
-          onClick={handleChangeLocation}
-          className="absolute bottom-4 left-4 z-[900] bg-[#141414] border border-[#2A2A2A] px-3 py-2 rounded-xl text-xs text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center gap-2 shadow-lg"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-          </svg>
-          <span className="max-w-[150px] truncate">{userAddress}</span>
-        </button>
+        <div className="absolute bottom-4 left-4 z-[900] flex items-center gap-2">
+          <button
+            onClick={() => setGoHomeTrigger((n) => n + 1)}
+            className="bg-[#141414] border border-[#2A2A2A] w-10 h-10 rounded-full flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all shadow-lg"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+            </svg>
+          </button>
+          <button
+            onClick={handleChangeLocation}
+            className="bg-[#141414] border border-[#2A2A2A] px-3 py-2 rounded-xl text-xs text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center gap-1.5 shadow-lg"
+          >
+            <span className="max-w-[120px] truncate">{userAddress}</span>
+            <svg className="w-3 h-3 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </button>
+        </div>
       )}
 
       <MapContainer
@@ -226,6 +247,7 @@ export default function MapView() {
       >
         <TileLayer attribution="" url={TILE_URL} />
         <FlyToUser pos={userPos} hasRoute={!!route} />
+        <GoHome pos={userPos} trigger={goHomeTrigger} />
         <FitRoute route={route} />
 
         {userPos && <Marker position={userPos} icon={homeIcon} />}
