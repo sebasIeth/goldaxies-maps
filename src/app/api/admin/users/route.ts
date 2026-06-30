@@ -63,16 +63,34 @@ export async function PATCH(req: NextRequest) {
   const denied = await requireSuperAdmin();
   if (denied) return denied;
 
-  const { email, role } = await req.json();
+  const { email, role, name, password, reset2FA } = await req.json();
 
-  if (!email || !role || !["admin", "superadmin"].includes(role)) {
-    return Response.json({ error: "Email and valid role required" }, { status: 400 });
+  if (!email) {
+    return Response.json({ error: "Email is required" }, { status: 400 });
+  }
+
+  if (role && !["admin", "superadmin"].includes(role)) {
+    return Response.json({ error: "Invalid role" }, { status: 400 });
+  }
+
+  if (password && password.length < 8) {
+    return Response.json({ error: "Password must be at least 8 characters" }, { status: 400 });
   }
 
   const db = await getDb();
+  const updates: Record<string, unknown> = {};
+  if (role) updates.role = role;
+  if (name) updates.name = name;
+  if (password) updates.passwordHash = await bcrypt.hash(password, 12);
+  if (reset2FA) updates.totpSecret = null;
+
+  if (Object.keys(updates).length === 0) {
+    return Response.json({ error: "Nothing to update" }, { status: 400 });
+  }
+
   const result = await db.collection("admins").updateOne(
     { email: email.toLowerCase().trim() },
-    { $set: { role } }
+    { $set: updates }
   );
 
   if (result.matchedCount === 0) {

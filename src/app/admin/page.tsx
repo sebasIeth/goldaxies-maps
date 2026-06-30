@@ -81,6 +81,15 @@ const t = {
     demoteConfirm: "Demote this user to Admin?",
     roleUpdated: "Role updated",
     confirm: "Confirm",
+    editUser: "Edit user",
+    newPassword: "New password",
+    newPasswordPlaceholder: "Leave empty to keep current",
+    reset2fa: "Reset 2FA",
+    reset2faConfirm: "Reset 2FA for this user? They will need to set it up again.",
+    reset2faDone: "2FA reset",
+    userUpdated: "User updated",
+    save: "Save",
+    you: "You",
   },
   es: {
     welcome: "Bienvenido",
@@ -139,6 +148,15 @@ const t = {
     demoteConfirm: "Bajar este usuario a Admin?",
     roleUpdated: "Rol actualizado",
     confirm: "Confirmar",
+    editUser: "Editar usuario",
+    newPassword: "Nueva contrasena",
+    newPasswordPlaceholder: "Dejar vacio para mantener la actual",
+    reset2fa: "Resetear 2FA",
+    reset2faConfirm: "Resetear 2FA de este usuario? Tendra que configurarlo de nuevo.",
+    reset2faDone: "2FA reseteado",
+    userUpdated: "Usuario actualizado",
+    save: "Guardar",
+    you: "Tu",
   },
 };
 
@@ -184,6 +202,10 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<"commerces" | "users">("commerces");
   const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => void; variant?: "danger" | "warning" } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [editUserForm, setEditUserForm] = useState({ name: "", password: "" });
+  const [editUserLoading, setEditUserLoading] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
 
   const l = t[lang];
 
@@ -358,6 +380,49 @@ export default function AdminPage() {
     }, "warning");
   }
 
+  function openEditUser(u: AdminUser) {
+    setEditingUser(u);
+    setEditUserForm({ name: u.name, password: "" });
+    setShowEditPassword(false);
+  }
+
+  async function handleUpdateUser(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditUserLoading(true);
+    const body: Record<string, string> = { email: editingUser.email };
+    if (editUserForm.name && editUserForm.name !== editingUser.name) body.name = editUserForm.name;
+    if (editUserForm.password) body.password = editUserForm.password;
+    const res = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    setEditUserLoading(false);
+    if (res.ok) {
+      showMsgFn(l.userUpdated, true);
+      setEditingUser(null);
+      fetchUsers();
+    } else {
+      const data = await res.json();
+      showMsgFn(data.error || l.errorUpdating, false);
+    }
+  }
+
+  function handleReset2FA(email: string) {
+    askConfirm(l.reset2faConfirm, async () => {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, reset2FA: true }),
+      });
+      if (res.ok) {
+        showMsgFn(l.reset2faDone, true);
+        fetchUsers();
+      }
+    }, "warning");
+  }
+
   const filtered = commerces.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -443,6 +508,55 @@ export default function AdminPage() {
               <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 bg-[#1A1A1A] text-gray-400 rounded-xl border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors text-sm font-medium">{l.cancel}</button>
               <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${confirmModal.variant === "warning" ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-red-500 hover:bg-red-400 text-white"}`}>{l.confirm}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {editingUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setEditingUser(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-[#141414] border border-[#2A2A2A] rounded-2xl w-full max-w-sm shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+                <svg className="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                {l.editUser}
+              </h2>
+              <button onClick={() => setEditingUser(null)} className="text-gray-600 hover:text-gray-400 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <form onSubmit={handleUpdateUser} className="p-5 space-y-4">
+              <div className="flex items-center gap-3 pb-3 border-b border-white/5">
+                <div className="w-10 h-10 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center">
+                  <span className="text-[#D4AF37] font-bold text-sm">{editingUser.name.charAt(0).toUpperCase()}</span>
+                </div>
+                <div>
+                  <p className="text-white text-sm font-medium">{editingUser.name}</p>
+                  <p className="text-gray-500 text-[11px]">{editingUser.email}</p>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.name}</label>
+                <input type="text" required value={editUserForm.name} onChange={(e) => setEditUserForm((f) => ({ ...f, name: e.target.value }))} className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm focus:ring-1 focus:ring-[#D4AF37]/50 outline-none" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.newPassword}</label>
+                <div className="relative">
+                  <input type={showEditPassword ? "text" : "password"} minLength={8} value={editUserForm.password} onChange={(e) => setEditUserForm((f) => ({ ...f, password: e.target.value }))} placeholder={l.newPasswordPlaceholder} className="w-full px-4 py-2.5 pr-10 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 outline-none" />
+                  <button type="button" onClick={() => setShowEditPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#D4AF37] transition-colors">
+                    {showEditPassword ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" /></svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2 border-t border-white/5">
+                <button type="button" onClick={() => setEditingUser(null)} className="flex-1 py-2.5 bg-[#1A1A1A] text-gray-400 rounded-xl border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors text-sm font-medium">{l.cancel}</button>
+                <button type="submit" disabled={editUserLoading} className="flex-1 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl transition-all disabled:opacity-50 text-sm">{editUserLoading ? l.saving : l.save}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -671,19 +785,30 @@ export default function AdminPage() {
                             {u.role === "superadmin" ? l.superadmin : l.admin}
                           </span>
                           {u.has2FA && <span className="px-1.5 py-0.5 text-[9px] font-semibold text-emerald-400 bg-emerald-500/10 rounded border border-emerald-500/20">{l.has2fa}</span>}
+                          {u.email === sessionEmail && <span className="px-1.5 py-0.5 text-[9px] font-semibold text-sky-400 bg-sky-500/10 rounded border border-sky-500/20">{l.you}</span>}
                         </div>
                         <p className="text-[11px] text-gray-600 mt-0.5">{u.email}</p>
                       </div>
-                      {u.email !== sessionEmail && (
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                          <button onClick={() => handleToggleRole(u.email, u.role)} className={`p-2 rounded-lg transition-all ${u.role === "superadmin" ? "text-[#D4AF37] hover:text-orange-400 hover:bg-orange-400/5" : "text-gray-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"}`} title={u.role === "superadmin" ? l.demoteConfirm : l.promoteConfirm}>
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={u.role === "superadmin" ? "M19 14l-7 7m0 0l-7-7m7 7V3" : "M5 10l7-7m0 0l7 7m-7-7v18"} /></svg>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button onClick={() => openEditUser(u)} className="p-2 text-gray-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-all" title={l.editUser}>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        {u.has2FA && u.email !== sessionEmail && (
+                          <button onClick={() => handleReset2FA(u.email)} className="p-2 text-gray-500 hover:text-amber-400 hover:bg-amber-400/5 rounded-lg transition-all" title={l.reset2fa}>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                           </button>
-                          <button onClick={() => handleDeleteUser(u.email)} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/5 rounded-lg transition-all">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                          </button>
-                        </div>
-                      )}
+                        )}
+                        {u.email !== sessionEmail && (
+                          <>
+                            <button onClick={() => handleToggleRole(u.email, u.role)} className={`p-2 rounded-lg transition-all ${u.role === "superadmin" ? "text-[#D4AF37] hover:text-orange-400 hover:bg-orange-400/5" : "text-gray-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"}`} title={u.role === "superadmin" ? l.demoteConfirm : l.promoteConfirm}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={u.role === "superadmin" ? "M19 14l-7 7m0 0l-7-7m7 7V3" : "M5 10l7-7m0 0l7 7m-7-7v18"} /></svg>
+                            </button>
+                            <button onClick={() => handleDeleteUser(u.email)} className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-400/5 rounded-lg transition-all" title={l.deleteUser}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
