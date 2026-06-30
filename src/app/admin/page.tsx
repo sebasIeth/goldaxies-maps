@@ -80,6 +80,7 @@ const t = {
     promoteConfirm: "Promote this user to Super Admin?",
     demoteConfirm: "Demote this user to Admin?",
     roleUpdated: "Role updated",
+    confirm: "Confirm",
   },
   es: {
     welcome: "Bienvenido",
@@ -137,6 +138,7 @@ const t = {
     promoteConfirm: "Promover este usuario a Super Admin?",
     demoteConfirm: "Bajar este usuario a Admin?",
     roleUpdated: "Rol actualizado",
+    confirm: "Confirmar",
   },
 };
 
@@ -179,8 +181,13 @@ export default function AdminPage() {
   const [userForm, setUserForm] = useState(EMPTY_USER_FORM);
   const [userLoading, setUserLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"commerces" | "users">("commerces");
+  const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => void; variant?: "danger" | "warning" } | null>(null);
 
   const l = t[lang];
+
+  function askConfirm(message: string, onConfirm: () => void, variant: "danger" | "warning" = "danger") {
+    setConfirmModal({ message, onConfirm, variant });
+  }
 
   const fetchCommerces = useCallback(async () => {
     const res = await fetch("/api/commerces");
@@ -285,14 +292,15 @@ export default function AdminPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm(l.deleteConfirm)) return;
-    const res = await fetch(`/api/commerces?id=${id}`, { method: "DELETE" });
-    if (res.ok) {
-      showMsgFn(l.commerceDeleted, true);
-      if (editingId === id) { setEditingId(null); setForm(EMPTY_FORM); }
-      await fetchCommerces();
-    } else showMsgFn(l.errorDeleting, false);
+  function handleDelete(id: string) {
+    askConfirm(l.deleteConfirm, async () => {
+      const res = await fetch(`/api/commerces?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        showMsgFn(l.commerceDeleted, true);
+        if (editingId === id) { setEditingId(null); setForm(EMPTY_FORM); }
+        await fetchCommerces();
+      } else showMsgFn(l.errorDeleting, false);
+    });
   }
 
   function handleCancel() {
@@ -321,28 +329,30 @@ export default function AdminPage() {
     }
   }
 
-  async function handleDeleteUser(email: string) {
-    if (!confirm(l.deleteUser)) return;
-    const res = await fetch(`/api/admin/users?email=${encodeURIComponent(email)}`, { method: "DELETE" });
-    if (res.ok) {
-      showMsgFn(l.userDeleted, true);
-      fetchUsers();
-    }
+  function handleDeleteUser(email: string) {
+    askConfirm(l.deleteUser, async () => {
+      const res = await fetch(`/api/admin/users?email=${encodeURIComponent(email)}`, { method: "DELETE" });
+      if (res.ok) {
+        showMsgFn(l.userDeleted, true);
+        fetchUsers();
+      }
+    });
   }
 
-  async function handleToggleRole(email: string, currentRole: string) {
+  function handleToggleRole(email: string, currentRole: string) {
     const newRole = currentRole === "superadmin" ? "admin" : "superadmin";
-    const msg = newRole === "superadmin" ? l.promoteConfirm : l.demoteConfirm;
-    if (!confirm(msg)) return;
-    const res = await fetch("/api/admin/users", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role: newRole }),
-    });
-    if (res.ok) {
-      showMsgFn(l.roleUpdated, true);
-      fetchUsers();
-    }
+    const message = newRole === "superadmin" ? l.promoteConfirm : l.demoteConfirm;
+    askConfirm(message, async () => {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role: newRole }),
+      });
+      if (res.ok) {
+        showMsgFn(l.roleUpdated, true);
+        fetchUsers();
+      }
+    }, "warning");
   }
 
   const filtered = commerces.filter(
@@ -409,6 +419,28 @@ export default function AdminPage() {
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           )}
           {msg.text}
+        </div>
+      )}
+
+      {confirmModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setConfirmModal(null)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6 w-full max-w-xs space-y-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-center">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${confirmModal.variant === "warning" ? "bg-amber-500/10" : "bg-red-500/10"}`}>
+                {confirmModal.variant === "warning" ? (
+                  <svg className="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" /></svg>
+                ) : (
+                  <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                )}
+              </div>
+            </div>
+            <p className="text-white text-sm text-center font-medium">{confirmModal.message}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmModal(null)} className="flex-1 py-2.5 bg-[#1A1A1A] text-gray-400 rounded-xl border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors text-sm font-medium">{l.cancel}</button>
+              <button onClick={() => { confirmModal.onConfirm(); setConfirmModal(null); }} className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${confirmModal.variant === "warning" ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-red-500 hover:bg-red-400 text-white"}`}>{l.confirm}</button>
+            </div>
+          </div>
         </div>
       )}
 
