@@ -22,6 +22,7 @@ export async function GET() {
       role: a.role || "admin",
       has2FA: !!a.totpSecret,
       createdAt: a.createdAt,
+      lastLogin: a.lastLogin || null,
     }))
   );
 }

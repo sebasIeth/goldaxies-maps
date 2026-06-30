@@ -90,6 +90,8 @@ const t = {
     userUpdated: "User updated",
     save: "Save",
     you: "You",
+    lastLogin: "Last login",
+    never: "Never",
   },
   es: {
     welcome: "Bienvenido",
@@ -157,6 +159,8 @@ const t = {
     userUpdated: "Usuario actualizado",
     save: "Guardar",
     you: "Tu",
+    lastLogin: "Ultimo acceso",
+    never: "Nunca",
   },
 };
 
@@ -168,6 +172,19 @@ interface AdminUser {
   name: string;
   role: string;
   has2FA: boolean;
+  lastLogin: string | null;
+}
+
+function formatTimeAgo(dateStr: string, lang: Lang): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return lang === "es" ? "Justo ahora" : "Just now";
+  if (mins < 60) return lang === "es" ? `Hace ${mins}min` : `${mins}min ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return lang === "es" ? `Hace ${hours}h` : `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return lang === "es" ? `Hace ${days}d` : `${days}d ago`;
+  return new Date(dateStr).toLocaleDateString(lang === "es" ? "es" : "en", { day: "numeric", month: "short" });
 }
 
 const EMPTY_FORM = {
@@ -787,7 +804,11 @@ export default function AdminPage() {
                           {u.has2FA && <span className="px-1.5 py-0.5 text-[9px] font-semibold text-emerald-400 bg-emerald-500/10 rounded border border-emerald-500/20">{l.has2fa}</span>}
                           {u.email === sessionEmail && <span className="px-1.5 py-0.5 text-[9px] font-semibold text-sky-400 bg-sky-500/10 rounded border border-sky-500/20">{l.you}</span>}
                         </div>
-                        <p className="text-[11px] text-gray-600 mt-0.5">{u.email}</p>
+                        <p className="text-[11px] text-gray-600 mt-0.5">
+                          {u.email}
+                          <span className="mx-1.5 text-gray-700">·</span>
+                          <span className="text-gray-500">{u.lastLogin ? formatTimeAgo(u.lastLogin, lang) : l.never}</span>
+                        </p>
                       </div>
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                         <button onClick={() => openEditUser(u)} className="p-2 text-gray-500 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5 rounded-lg transition-all" title={l.editUser}>

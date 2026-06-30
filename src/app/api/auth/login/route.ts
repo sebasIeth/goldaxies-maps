@@ -68,8 +68,12 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: "Credenciales inválidas" }, { status: 401 });
   }
 
-  // Login exitoso → limpiar intentos
   clearAttempts(ip);
+
+  db.collection("admins").updateOne(
+    { email: admin.email },
+    { $set: { lastLogin: new Date() } }
+  );
 
   const has2FA = !!admin.totpSecret;
 
