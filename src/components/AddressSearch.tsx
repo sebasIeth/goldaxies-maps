@@ -158,7 +158,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder={showCountrySelect && selectedCountry ? `Search in ${selectedCountry.name}...` : "Search address..."}
+          placeholder="Search your address..."
           className="w-full pl-9 pr-10 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none"
         />
         {loading && (
