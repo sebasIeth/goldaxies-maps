@@ -222,8 +222,9 @@ export default function MapView() {
         zoom={DEFAULT_ZOOM}
         className="w-full h-full"
         zoomControl={false}
+        attributionControl={false}
       >
-        <TileLayer attribution={TILE_ATTR} url={TILE_URL} />
+        <TileLayer attribution="" url={TILE_URL} />
         <FlyToUser pos={userPos} hasRoute={!!route} />
         <FitRoute route={route} />
 
