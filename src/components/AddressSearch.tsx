@@ -59,7 +59,7 @@ export default function AddressSearch({ value, onSelect }: Props) {
               format: "json",
               addressdetails: "1",
               limit: "5",
-              countrycodes: "co,ar",
+              countrycodes: "ar,bo,br,cl,co,cr,cu,do,ec,sv,gt,hn,mx,ni,pa,py,pe,pr,uy,ve",
             }),
           {
             headers: { "Accept-Language": "es" },

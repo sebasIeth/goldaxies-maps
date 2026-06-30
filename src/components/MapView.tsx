@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import L from "leaflet";
 import {
   MapContainer,
@@ -19,8 +19,9 @@ import "leaflet/dist/leaflet.css";
 
 const DEFAULT_CENTER: [number, number] = [6.3375, -75.5565];
 const DEFAULT_ZOOM = 15;
+const STORAGE_KEY = "goldaxis-user-location";
 
-/* ── Dark premium map tiles (no Google, no API key) ── */
+/* ── Dark premium map tiles ── */
 const TILE_URL =
   "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 const TILE_ATTR =
@@ -46,15 +47,22 @@ function createIcon(color: string, glow: string) {
 }
 
 const commerceIcon = createIcon("#D4AF37", "rgba(212,175,55,0.4)");
-const userIcon = L.divIcon({
+
+const homeIcon = L.divIcon({
   className: "",
   html: `<div style="
-    width: 16px; height: 16px; border-radius: 50%;
-    background: #D4AF37; border: 3px solid #0A0A0A;
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    background: #D4AF37; border-radius: 50%;
+    border: 3px solid #0A0A0A;
     box-shadow: 0 0 0 3px rgba(212,175,55,0.3), 0 0 16px rgba(212,175,55,0.5);
-  "></div>`,
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
+  ">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+  </div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
 });
 
 /* ── Map helpers ── */
@@ -71,27 +79,54 @@ function FitRoute({ route }: { route: RouteResult | null }) {
 
 function FlyToUser({ pos, hasRoute }: { pos: [number, number] | null; hasRoute: boolean }) {
   const map = useMap();
-  const flown = useRef(false);
+  const [flown, setFlown] = useState(false);
   useEffect(() => {
-    if (pos && !flown.current && !hasRoute) {
+    if (pos && !flown && !hasRoute) {
       map.flyTo(pos, 15, { duration: 1.5 });
-      flown.current = true;
+      setFlown(true);
     }
-  }, [pos, map, hasRoute]);
+  }, [pos, map, hasRoute, flown]);
   return null;
+}
+
+/* ── localStorage helpers ── */
+function getSavedLocation(): { lat: number; lng: number; address: string } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function saveLocation(lat: number, lng: number, address: string) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ lat, lng, address }));
 }
 
 /* ── Main ── */
 export default function MapView() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [userAddress, setUserAddress] = useState<string | null>(null);
   const [selected, setSelected] = useState<Commerce | null>(null);
-  const [geoError, setGeoError] = useState<string | null>(null);
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [commerces, setCommerces] = useState<Commerce[]>([]);
-  const [permissionStep, setPermissionStep] = useState<"ask" | "done">("ask");
-  const watchRef = useRef<number | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  // Check localStorage on mount
+  useEffect(() => {
+    const saved = getSavedLocation();
+    if (saved) {
+      setUserPos([saved.lat, saved.lng]);
+      setUserAddress(saved.address);
+    } else {
+      setShowOnboarding(true);
+    }
+    setReady(true);
+  }, []);
 
   // Fetch commerces from API
   useEffect(() => {
@@ -101,62 +136,19 @@ export default function MapView() {
       .catch(() => {});
   }, []);
 
-  function startGeolocation() {
-    if (!navigator.geolocation) {
-      setGeoError("Tu navegador no soporta geolocalización");
-      return;
-    }
-
-    setGeoError(null);
-
-    // Safari iOS: intentar primero con baja precisión (más rápido, no falla tanto)
-    // y después refinar con alta precisión
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        setUserPos([p.coords.latitude, p.coords.longitude]);
-
-        // Refinar con alta precisión en segundo plano
-        watchRef.current = navigator.geolocation.watchPosition(
-          (wp) => setUserPos([wp.coords.latitude, wp.coords.longitude]),
-          () => {},
-          { enableHighAccuracy: true, timeout: 60000, maximumAge: 30000 }
-        );
-      },
-      (err) => {
-        // Fallback: si falla sin alta precisión, intentar CON alta precisión
-        navigator.geolocation.getCurrentPosition(
-          (p) => {
-            setUserPos([p.coords.latitude, p.coords.longitude]);
-          },
-          (err2) => {
-            if (err2.code === 1 || err.code === 1) {
-              setGeoError("Permiso denegado. En iPhone: Ajustes → Safari → Ubicación → Permitir");
-            } else if (err2.code === 2 || err.code === 2) {
-              setGeoError("No se pudo obtener la ubicación. ¿Tenés el GPS activado?");
-            } else {
-              setGeoError("La ubicación tardó demasiado. Intentá de nuevo.");
-            }
-          },
-          { enableHighAccuracy: true, timeout: 60000, maximumAge: 120000 }
-        );
-      },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 120000 }
-    );
+  function handleSetLocation(lat: number, lng: number, address: string) {
+    setUserPos([lat, lng]);
+    setUserAddress(address);
+    saveLocation(lat, lng, address);
+    setShowOnboarding(false);
   }
 
-  useEffect(() => {
-    return () => {
-      if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
-    };
-  }, []);
-
-  function handleAllowLocation() {
-    setPermissionStep("done");
-    startGeolocation();
+  function handleSkip() {
+    setShowOnboarding(false);
   }
 
-  function handleDenyLocation() {
-    setPermissionStep("done");
+  function handleChangeLocation() {
+    setShowOnboarding(true);
   }
 
   function getDistanceTo(c: Commerce): number | null {
@@ -187,27 +179,13 @@ export default function MapView() {
     return da - db;
   });
 
+  if (!ready) return null;
+
   return (
     <div className="relative w-full h-full bg-[#0A0A0A]">
-      {/* Privacy dialog */}
-      {permissionStep === "ask" && (
-        <LocationPermission onAllow={handleAllowLocation} onDeny={handleDenyLocation} />
-      )}
-
-      {/* Geo error */}
-      {geoError && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-[#141414] border border-[#D4AF37]/30 text-[#D4AF37] px-4 py-2.5 rounded-xl text-xs shadow-lg flex items-center gap-3">
-          <span>{geoError}</span>
-          <button
-            onClick={() => {
-              setGeoError(null);
-              startGeolocation();
-            }}
-            className="px-2.5 py-1 bg-[#D4AF37] text-black font-semibold rounded-lg text-[10px] hover:bg-[#E5C04B] transition-colors whitespace-nowrap"
-          >
-            Reintentar
-          </button>
-        </div>
+      {/* Address onboarding */}
+      {showOnboarding && (
+        <LocationPermission onSetLocation={handleSetLocation} onSkip={handleSkip} />
       )}
 
       {/* Loading route */}
@@ -217,8 +195,22 @@ export default function MapView() {
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
             <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
           </svg>
-          Trazando ruta...
+          Tracing route...
         </div>
+      )}
+
+      {/* Change location button */}
+      {userAddress && !showOnboarding && (
+        <button
+          onClick={handleChangeLocation}
+          className="absolute bottom-4 left-4 z-[900] bg-[#141414] border border-[#2A2A2A] px-3 py-2 rounded-xl text-xs text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center gap-2 shadow-lg"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+          </svg>
+          <span className="max-w-[150px] truncate">{userAddress}</span>
+        </button>
       )}
 
       <MapContainer
@@ -231,7 +223,7 @@ export default function MapView() {
         <FlyToUser pos={userPos} hasRoute={!!route} />
         <FitRoute route={route} />
 
-        {userPos && <Marker position={userPos} icon={userIcon} />}
+        {userPos && <Marker position={userPos} icon={homeIcon} />}
 
         {sorted.map((c) => (
           <Marker

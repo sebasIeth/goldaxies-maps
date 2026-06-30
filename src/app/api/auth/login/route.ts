@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
   const token = await createToken({
     email: admin.email,
     name: admin.name,
+    role: admin.role || "admin",
     twoFactorVerified: false,
   });
   await setSessionCookie(token);
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
   return Response.json({
     success: true,
     name: admin.name,
+    role: admin.role || "admin",
     needs2FA: has2FA,
     needsSetup2FA: !has2FA,
   });

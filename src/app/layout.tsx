@@ -13,8 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mapa de Comercios",
-  description: "Encontrá comercios que aceptan el token cerca tuyo",
+  title: "GoldAxis Maps",
+  description: "Discover businesses that accept the GoldAxis token near you",
+  icons: {
+    icon: "/goldaxis-logo.png",
+    apple: "/goldaxis-logo.png",
+  },
 };
 
 export default function RootLayout({

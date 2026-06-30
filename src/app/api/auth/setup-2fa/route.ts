@@ -70,6 +70,7 @@ export async function PUT(req: NextRequest) {
   const token = await createToken({
     email: session.email,
     name: session.name,
+    role: session.role,
     twoFactorVerified: true,
   });
   await setSessionCookie(token);
