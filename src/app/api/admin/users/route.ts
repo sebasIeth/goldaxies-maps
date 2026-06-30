@@ -10,7 +10,7 @@ export async function GET() {
   const db = await getDb();
   const admins = await db
     .collection("admins")
-    .find({}, { projection: { passwordHash: 0, totpSecret: 0 } })
+    .find({}, { projection: { passwordHash: 0 } })
     .sort({ createdAt: 1 })
     .toArray();
 
