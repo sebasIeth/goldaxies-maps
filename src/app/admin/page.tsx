@@ -6,16 +6,21 @@ import { useRouter } from "next/navigation";
 import { Commerce } from "@/types/commerce";
 import AddressSearch from "@/components/AddressSearch";
 
-const LOGO_OPTIONS = [
-  { value: "/logos/cafe.svg", label: { en: "Cafe", es: "Cafe" } },
-  { value: "/logos/tech.svg", label: { en: "Tech", es: "Tech" } },
-  { value: "/logos/market.svg", label: { en: "Market", es: "Mercado" } },
-  { value: "/logos/fashion.svg", label: { en: "Fashion", es: "Moda" } },
-  { value: "/logos/pharmacy.svg", label: { en: "Pharmacy", es: "Farmacia" } },
-  { value: "/logos/gym.svg", label: { en: "Gym", es: "Gym" } },
-  { value: "/logos/restaurant.svg", label: { en: "Restaurant", es: "Resto" } },
-  { value: "/logos/barber.svg", label: { en: "Barber", es: "Barberia" } },
-  { value: "/logos/naturist.svg", label: { en: "Natural", es: "Natural" } },
+const CATEGORIES = [
+  { value: "Cafe", logo: "/logos/cafe.svg", label: { en: "Cafe", es: "Cafe" } },
+  { value: "Restaurant", logo: "/logos/restaurant.svg", label: { en: "Restaurant", es: "Restaurante" } },
+  { value: "Market", logo: "/logos/market.svg", label: { en: "Market", es: "Mercado" } },
+  { value: "Tech", logo: "/logos/tech.svg", label: { en: "Tech", es: "Tecnologia" } },
+  { value: "Fashion", logo: "/logos/fashion.svg", label: { en: "Fashion", es: "Moda" } },
+  { value: "Pharmacy", logo: "/logos/pharmacy.svg", label: { en: "Pharmacy", es: "Farmacia" } },
+  { value: "Gym", logo: "/logos/gym.svg", label: { en: "Gym", es: "Gimnasio" } },
+  { value: "Barber", logo: "/logos/barber.svg", label: { en: "Barber", es: "Barberia" } },
+  { value: "Natural", logo: "/logos/naturist.svg", label: { en: "Natural", es: "Natural" } },
+  { value: "Beauty", logo: "/logos/beauty.svg", label: { en: "Beauty", es: "Belleza" } },
+  { value: "Services", logo: "/logos/services.svg", label: { en: "Services", es: "Servicios" } },
+  { value: "Education", logo: "/logos/education.svg", label: { en: "Education", es: "Educacion" } },
+  { value: "Real Estate", logo: "/logos/realestate.svg", label: { en: "Real Estate", es: "Inmobiliaria" } },
+  { value: "Other", logo: "/logos/other.svg", label: { en: "Other", es: "Otro" } },
 ];
 
 const t = {
@@ -34,7 +39,7 @@ const t = {
     commerceName: "Commerce name",
     commerceNamePlaceholder: "e.g. Crypto Cafe",
     category: "Category",
-    categoryPlaceholder: "e.g. Coffee shop, Restaurant...",
+    selectCategory: "Select a category...",
     description: "Description",
     descriptionPlaceholder: "What does this commerce offer? Any token benefits?",
     address: "Address",
@@ -88,7 +93,7 @@ const t = {
     commerceName: "Nombre del comercio",
     commerceNamePlaceholder: "Ej: Cafe Crypto",
     category: "Categoria",
-    categoryPlaceholder: "Ej: Cafeteria, Restaurante...",
+    selectCategory: "Selecciona una categoria...",
     description: "Descripcion",
     descriptionPlaceholder: "Que ofrece este comercio? Algun beneficio con token?",
     address: "Direccion",
@@ -141,12 +146,12 @@ interface AdminUser {
 
 const EMPTY_FORM = {
   name: "",
-  type: "",
+  type: "Cafe",
   description: "",
   address: "",
   lat: "",
   lng: "",
-  logo: "/logos/market.svg",
+  logo: "/logos/cafe.svg",
 };
 
 const EMPTY_USER_FORM = { name: "", email: "", password: "" };
@@ -450,14 +455,19 @@ export default function AdminPage() {
                   </button>
                 </div>
                 <form onSubmit={handleSubmit} className="p-5 space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.commerceName}</label>
-                      <input type="text" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder={l.commerceNamePlaceholder} className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none transition-all" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.category}</label>
-                      <input type="text" required value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} placeholder={l.categoryPlaceholder} className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none transition-all" />
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.commerceName}</label>
+                    <input type="text" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder={l.commerceNamePlaceholder} className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none transition-all" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.category}</label>
+                    <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-2">
+                      {CATEGORIES.map((cat) => (
+                        <button key={cat.value} type="button" onClick={() => setForm((f) => ({ ...f, type: cat.value, logo: cat.logo }))} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${form.type === cat.value ? "border-[#D4AF37]/50 bg-[#D4AF37]/5 shadow-lg shadow-[#D4AF37]/5" : "border-white/5 bg-[#0A0A0A] hover:border-white/10"}`}>
+                          <div className="w-9 h-9 relative"><Image src={cat.logo} alt={cat.label[lang]} fill className="object-contain" /></div>
+                          <span className={`text-[10px] font-medium ${form.type === cat.value ? "text-[#D4AF37]" : "text-gray-600"}`}>{cat.label[lang]}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <div className="space-y-1.5">
@@ -473,17 +483,6 @@ export default function AdminPage() {
                         <p className="text-[11px] text-gray-500">{l.coordinates}: <span className="text-gray-400 font-mono">{parseFloat(form.lat).toFixed(5)}, {parseFloat(form.lng).toFixed(5)}</span></p>
                       </div>
                     )}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.icon}</label>
-                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                      {LOGO_OPTIONS.map((opt) => (
-                        <button key={opt.value} type="button" onClick={() => setForm((f) => ({ ...f, logo: opt.value }))} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${form.logo === opt.value ? "border-[#D4AF37]/50 bg-[#D4AF37]/5 shadow-lg shadow-[#D4AF37]/5" : "border-white/5 bg-[#0A0A0A] hover:border-white/10"}`}>
-                          <div className="w-8 h-8 relative"><Image src={opt.value} alt={opt.label[lang]} fill className="object-cover" /></div>
-                          <span className={`text-[10px] font-medium ${form.logo === opt.value ? "text-[#D4AF37]" : "text-gray-600"}`}>{opt.label[lang]}</span>
-                        </button>
-                      ))}
-                    </div>
                   </div>
                   <div className="flex gap-3 pt-2 border-t border-white/5">
                     <button type="submit" disabled={loading} className="px-6 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl hover:from-[#E5C04B] hover:to-[#D4AF37] transition-all disabled:opacity-50 text-sm shadow-lg shadow-[#D4AF37]/10">
