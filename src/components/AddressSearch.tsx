@@ -75,10 +75,15 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
 
   // Cascading selects state (public map)
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
+  const [cities, setCities] = useState<GeoOption[]>([]);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [provinceOpen, setProvinceOpen] = useState(false);
+  const [cityOpen, setCityOpen] = useState(false);
   const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
   const provinceRef = useRef<HTMLDivElement>(null);
+  const cityRef = useRef<HTMLDivElement>(null);
 
   // Text search state (admin)
   const [query, setQuery] = useState(value);
@@ -101,6 +106,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
       if (countryRef.current && !countryRef.current.contains(e.target as Node)) setCountryOpen(false);
       if (provinceRef.current && !provinceRef.current.contains(e.target as Node)) setProvinceOpen(false);
+      if (cityRef.current && !cityRef.current.contains(e.target as Node)) setCityOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -111,7 +117,42 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   function loadProvinces(countryCode: string) {
     setProvinces(PROVINCES[countryCode] || []);
     setSelectedProvince(null);
+    setCities([]);
+    setSelectedCity(null);
     setLoadingProvinces(false);
+  }
+
+  const COUNTRY_ISO: Record<string, string> = {
+    us: "US", ar: "AR", bo: "BO", br: "BR", cl: "CL", co: "CO",
+    cr: "CR", cu: "CU", do: "DO", ec: "EC", sv: "SV", gt: "GT",
+    hn: "HN", mx: "MX", ni: "NI", pa: "PA", py: "PY", pe: "PE",
+    pr: "PR", uy: "UY", ve: "VE",
+  };
+
+  async function fetchCities(provinceName: string, countryCode: string) {
+    setLoadingCities(true);
+    setCities([]);
+    setSelectedCity(null);
+    const iso = COUNTRY_ISO[countryCode] || countryCode.toUpperCase();
+    const query = `[out:json][timeout:25];area["ISO3166-1"="${iso}"]->.country;area["name"="${provinceName}"](area.country)->.state;(node(area.state)["place"~"city|town"];);out tags;`;
+    try {
+      const res = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: "data=" + encodeURIComponent(query),
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
+      const data = await res.json();
+      const opts: GeoOption[] = (data.elements || [])
+        .filter((e: { tags?: { name?: string } }) => e.tags?.name)
+        .map((e: { tags: { name: string }; lat: number; lon: number }) => ({
+          name: e.tags.name,
+          lat: e.lat,
+          lng: e.lon,
+        }))
+        .sort((a: GeoOption, b: GeoOption) => a.name.localeCompare(b.name));
+      setCities(opts);
+    } catch { /* ignore */ }
+    setLoadingCities(false);
   }
 
   function handleCountrySelect(code: string) {
@@ -131,8 +172,16 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   function handleProvinceSelect(prov: GeoOption) {
     setSelectedProvince(prov.name);
     setProvinceOpen(false);
-    const addr = `${prov.name}, ${selectedCountry?.name}`;
-    onSelect(addr, prov.lat, prov.lng);
+    setCities([]);
+    setSelectedCity(null);
+    fetchCities(prov.name, country);
+  }
+
+  function handleCitySelect(city: GeoOption) {
+    setSelectedCity(city.name);
+    setCityOpen(false);
+    const addr = `${city.name}, ${selectedProvince}, ${selectedCountry?.name}`;
+    onSelect(addr, city.lat, city.lng);
   }
 
   // Admin text search handlers
@@ -245,6 +294,45 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
             )}
           </div>
 
+          {/* City / Town */}
+          <div ref={cityRef} className="relative">
+            <button
+              type="button"
+              onClick={() => cities.length > 0 && setCityOpen((v) => !v)}
+              disabled={cities.length === 0 && !loadingCities}
+              className={`${dropdownBtnClass} ${selectedCity ? "text-white" : "text-gray-500"} disabled:opacity-40 disabled:cursor-not-allowed`}
+            >
+              <svg className="w-4 h-4 text-[#D4AF37] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span className="flex-1 text-left">
+                {loadingCities ? t("loadingCities", lang) : selectedCity || t("selectCity", lang)}
+              </span>
+              {loadingCities ? <Spinner /> : <ChevronIcon open={cityOpen} />}
+            </button>
+            {cityOpen && (
+              <div className={dropdownListClass}>
+                {cities.map((c) => (
+                  <button
+                    key={c.name}
+                    type="button"
+                    onClick={() => handleCitySelect(c)}
+                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 ${
+                      c.name === selectedCity ? "bg-[#D4AF37]/10 text-[#D4AF37]" : "text-white hover:bg-[#1A1A1A] active:bg-[#1A1A1A]"
+                    }`}
+                  >
+                    <span className="text-sm flex-1">{c.name}</span>
+                    {c.name === selectedCity && (
+                      <svg className="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
 
