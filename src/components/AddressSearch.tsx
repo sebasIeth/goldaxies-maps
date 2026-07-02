@@ -45,8 +45,10 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [country, setCountry] = useState("us");
+  const [countryOpen, setCountryOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const countryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setQuery(value);
@@ -56,6 +58,9 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
+      }
+      if (countryRef.current && !countryRef.current.contains(e.target as Node)) {
+        setCountryOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
@@ -111,8 +116,9 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     onSelect(shortAddress, parseFloat(r.lat), parseFloat(r.lon));
   }
 
-  function handleCountryChange(code: string) {
+  function handleCountrySelect(code: string) {
     setCountry(code);
+    setCountryOpen(false);
     setQuery("");
     setResults([]);
     setOpen(false);
@@ -123,21 +129,43 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   return (
     <div ref={containerRef} className="relative space-y-2">
       {showCountrySelect && (
-        <div className="relative">
-          <select
-            value={country}
-            onChange={(e) => handleCountryChange(e.target.value)}
-            className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-sm focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none appearance-none cursor-pointer"
+        <div ref={countryRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setCountryOpen((v) => !v)}
+            className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-sm flex items-center gap-3 transition-all hover:border-[#3A3A3A] active:border-[#D4AF37]/30"
           >
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.flag}  {c.name}
-              </option>
-            ))}
-          </select>
-          <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
+            <span className="text-lg leading-none">{selectedCountry?.flag}</span>
+            <span className="flex-1 text-left">{selectedCountry?.name}</span>
+            <svg className={`w-4 h-4 text-gray-500 transition-transform ${countryOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {countryOpen && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-[#141414] border border-[#2A2A2A] rounded-xl overflow-hidden shadow-2xl z-50 max-h-[240px] overflow-y-auto">
+              {COUNTRIES.map((c) => (
+                <button
+                  key={c.code}
+                  type="button"
+                  onClick={() => handleCountrySelect(c.code)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 ${
+                    c.code === country
+                      ? "bg-[#D4AF37]/10 text-[#D4AF37]"
+                      : "text-white hover:bg-[#1A1A1A] active:bg-[#1A1A1A]"
+                  }`}
+                >
+                  <span className="text-lg leading-none">{c.flag}</span>
+                  <span className="text-sm flex-1">{c.name}</span>
+                  {c.code === country && (
+                    <svg className="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
       <div className="relative">
@@ -181,7 +209,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
               key={r.place_id}
               type="button"
               onClick={() => handleSelect(r)}
-              className="w-full text-left px-4 py-3 hover:bg-[#252525] transition-colors border-b border-[#222] last:border-b-0 flex items-start gap-2.5"
+              className="w-full text-left px-4 py-3 hover:bg-[#252525] active:bg-[#252525] transition-colors border-b border-[#222] last:border-b-0 flex items-start gap-2.5"
             >
               <svg
                 className="w-4 h-4 text-[#D4AF37] mt-0.5 flex-shrink-0"
