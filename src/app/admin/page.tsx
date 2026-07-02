@@ -47,6 +47,9 @@ const t = {
     changeImage: "Change image",
     uploading: "Uploading...",
     imageUploaded: "Image uploaded",
+    imageDimensions: "Recommended: 800×400px (2:1 landscape)",
+    preview: "Preview",
+    previewTitle: "User preview",
     orUseCategory: "Or use a category icon:",
     phone: "Phone number",
     phonePlaceholder: "e.g. +1 555 123 4567",
@@ -124,6 +127,9 @@ const t = {
     changeImage: "Cambiar imagen",
     uploading: "Subiendo...",
     imageUploaded: "Imagen subida",
+    imageDimensions: "Recomendado: 800×400px (2:1 horizontal)",
+    preview: "Vista previa",
+    previewTitle: "Vista del usuario",
     orUseCategory: "O usar icono de categoria:",
     phone: "Numero de telefono",
     phonePlaceholder: "Ej: +57 300 123 4567",
@@ -238,6 +244,7 @@ export default function AdminPage() {
   const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => void; variant?: "danger" | "warning" } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editUserForm, setEditUserForm] = useState({ name: "", password: "" });
   const [editUserLoading, setEditUserLoading] = useState(false);
@@ -569,6 +576,56 @@ export default function AdminPage() {
         </div>
       )}
 
+      {showPreview && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setShowPreview(false)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                {l.previewTitle}
+              </span>
+              <button onClick={() => setShowPreview(false)} className="w-7 h-7 flex items-center justify-center rounded-full bg-white/10 text-gray-400 hover:text-white transition-colors text-xs">✕</button>
+            </div>
+            <div className="bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden">
+              {form.image && (
+                <div className="relative w-full h-36">
+                  <Image src={form.image} alt={form.name} fill className="object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#141414] to-transparent" />
+                </div>
+              )}
+              <div className={`flex items-center gap-3 px-4 pb-2 ${form.image ? "-mt-8 relative z-10" : "pt-4"}`}>
+                <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#0A0A0A] border border-[#2A2A2A] flex-shrink-0 relative">
+                  <Image src={form.image || (CATEGORIES.find((c) => c.value === form.type)?.logo || "/logos/cafe.svg")} alt={form.name} fill className={form.image ? "object-cover" : "object-cover p-1"} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base leading-tight">{form.name || "Commerce name"}</h3>
+                  <span className="text-xs text-[#D4AF37] font-medium">{form.type}</span>
+                </div>
+              </div>
+              {form.description && <div className="px-4 pb-2"><p className="text-gray-400 text-xs leading-relaxed">{form.description}</p></div>}
+              {form.phone && (
+                <div className="px-4 pb-2 flex items-center gap-2 text-xs text-gray-500">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                  <span>{form.phone}</span>
+                </div>
+              )}
+              {form.address && (
+                <div className="px-4 pb-2 flex items-center gap-2 text-xs text-gray-500">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  <span className="truncate">{form.address}</span>
+                </div>
+              )}
+              <div className="px-4 pb-4 pt-1">
+                <div className="w-full text-center py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl text-sm">
+                  {lang === "es" ? "Cómo llegar" : "Get directions"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editingUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setEditingUser(null)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
@@ -698,6 +755,10 @@ export default function AdminPage() {
                             {l.changeImage}
                             <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
                           </label>
+                          <button type="button" onClick={() => setShowPreview(true)} className="text-[10px] text-[#D4AF37]/70 hover:text-[#D4AF37] transition-colors text-left flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            {l.preview}
+                          </button>
                           <button type="button" onClick={() => setForm((f) => ({ ...f, image: "", logo: CATEGORIES.find((c) => c.value === f.type)?.logo || "/logos/cafe.svg" }))} className="text-[10px] text-gray-600 hover:text-red-400 transition-colors text-left">
                             {lang === "es" ? "Quitar imagen" : "Remove image"}
                           </button>
@@ -711,6 +772,7 @@ export default function AdminPage() {
                           <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         )}
                         <span className="text-xs text-gray-500">{uploadingImage ? l.uploading : l.uploadImage}</span>
+                        <span className="text-[10px] text-gray-700">{l.imageDimensions}</span>
                         <input type="file" accept="image/*" className="hidden" disabled={uploadingImage} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
                       </label>
                     )}
@@ -751,6 +813,12 @@ export default function AdminPage() {
                     <button type="submit" disabled={loading} className="px-6 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl hover:from-[#E5C04B] hover:to-[#D4AF37] transition-all disabled:opacity-50 text-sm shadow-lg shadow-[#D4AF37]/10">
                       {loading ? l.saving : editingId ? l.saveChanges : l.addCommerce}
                     </button>
+                    {form.name && (
+                      <button type="button" onClick={() => setShowPreview(true)} className="px-4 py-2.5 bg-[#0A0A0A] border border-white/10 rounded-xl text-xs text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center gap-1.5">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        {l.preview}
+                      </button>
+                    )}
                     <button type="button" onClick={handleCancel} className="px-6 py-2.5 text-gray-500 hover:text-gray-300 text-sm transition-colors">{l.cancel}</button>
                   </div>
                 </form>
