@@ -15,6 +15,7 @@ import { getRoute, RouteResult } from "@/lib/routing";
 import CommerceCard from "./CommerceCard";
 import CommerceList from "./CommerceList";
 import LocationPermission from "./LocationPermission";
+import { Lang, LANG_KEY, t } from "@/lib/translations";
 import "leaflet/dist/leaflet.css";
 
 const DEFAULT_CENTER: [number, number] = [4.6, -74.08];
@@ -130,6 +131,7 @@ export default function MapView() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [ready, setReady] = useState(false);
   const [goHomeTrigger, setGoHomeTrigger] = useState(0);
+  const [lang, setLang] = useState<Lang>("es");
 
   // Check localStorage on mount
   useEffect(() => {
@@ -140,6 +142,8 @@ export default function MapView() {
     } else {
       setShowOnboarding(true);
     }
+    const savedLang = localStorage.getItem(LANG_KEY) as Lang | null;
+    if (savedLang === "en" || savedLang === "es") setLang(savedLang);
     setReady(true);
   }, []);
 
@@ -164,6 +168,12 @@ export default function MapView() {
 
   function handleChangeLocation() {
     setShowOnboarding(true);
+  }
+
+  function toggleLang() {
+    const next = lang === "es" ? "en" : "es";
+    setLang(next);
+    localStorage.setItem(LANG_KEY, next);
   }
 
   function getDistanceTo(c: Commerce): number | null {
@@ -200,7 +210,7 @@ export default function MapView() {
     <div className="relative w-full h-full bg-[#0A0A0A]">
       {/* Address onboarding */}
       {showOnboarding && (
-        <LocationPermission onSetLocation={handleSetLocation} onSkip={handleSkip} />
+        <LocationPermission onSetLocation={handleSetLocation} onSkip={handleSkip} lang={lang} />
       )}
 
       {/* Loading route */}
@@ -210,7 +220,7 @@ export default function MapView() {
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
             <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
           </svg>
-          Tracing route...
+          {t("tracingRoute", lang)}
         </div>
       )}
 
@@ -237,6 +247,14 @@ export default function MapView() {
           </button>
         </div>
       )}
+
+      {/* Language toggle */}
+      <button
+        onClick={toggleLang}
+        className="absolute bottom-4 right-4 z-[900] bg-[#141414] border border-[#2A2A2A] w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold text-[#D4AF37] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/30 transition-all shadow-lg safe-bottom"
+      >
+        {lang === "es" ? "EN" : "ES"}
+      </button>
 
       <MapContainer
         center={userPos || DEFAULT_CENTER}
@@ -285,6 +303,7 @@ export default function MapView() {
           getDistance={getDistanceTo}
           open={listOpen}
           onToggle={() => setListOpen((v) => !v)}
+          lang={lang}
           onSelect={(c) => {
             setSelected(c);
             setRoute(null);
@@ -300,6 +319,7 @@ export default function MapView() {
           route={route}
           loadingRoute={loadingRoute}
           hasUserPos={!!userPos}
+          lang={lang}
           onNavigate={() => handleNavigate(selected)}
           onClose={handleClose}
         />

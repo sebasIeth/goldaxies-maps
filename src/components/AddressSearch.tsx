@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { Lang, t } from "@/lib/translations";
 
 const COUNTRIES = [
   { code: "us", name: "United States", flag: "🇺🇸", dial: "+1" },
@@ -38,9 +39,10 @@ interface Props {
   onSelect: (address: string, lat: number, lng: number) => void;
   showCountrySelect?: boolean;
   onCountryChange?: (dialCode: string) => void;
+  lang?: Lang;
 }
 
-export default function AddressSearch({ value, onSelect, showCountrySelect = false, onCountryChange }: Props) {
+export default function AddressSearch({ value, onSelect, showCountrySelect = false, onCountryChange, lang = "es" }: Props) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -190,7 +192,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Search your address..."
+          placeholder={t("searchAddress", lang)}
           className="w-full pl-9 pr-10 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-sm placeholder-gray-600 focus:ring-2 focus:ring-[#D4AF37] focus:border-[#D4AF37] outline-none"
         />
         {loading && (

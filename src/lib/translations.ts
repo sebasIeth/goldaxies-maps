@@ -1,0 +1,22 @@
+export type Lang = "en" | "es";
+
+export const LANG_KEY = "goldaxis-lang";
+
+export const mapTranslations = {
+  tracingRoute: { en: "Tracing route...", es: "Trazando ruta..." },
+  nearbyCommerces: { en: "nearby commerces", es: "comercios cercanos" },
+  searchPlaceholder: { en: "Search commerce...", es: "Buscar comercio..." },
+  noResults: { en: "No commerces found", es: "No se encontraron comercios" },
+  getDirections: { en: "Get directions", es: "Cómo llegar" },
+  recalcRoute: { en: "Recalculate route", es: "Recalcular ruta" },
+  yourLocation: { en: "Your Location", es: "Tu Ubicación" },
+  locationDesc: { en: "Select your country and enter your address.", es: "Selecciona tu país e ingresa tu dirección." },
+  locationFound: { en: "Location found", es: "Ubicación encontrada" },
+  confirmLocation: { en: "Confirm location", es: "Confirmar ubicación" },
+  skipForNow: { en: "Skip for now", es: "Omitir por ahora" },
+  searchAddress: { en: "Search your address...", es: "Busca tu dirección..." },
+} as const;
+
+export function t(key: keyof typeof mapTranslations, lang: Lang): string {
+  return mapTranslations[key][lang];
+}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Commerce } from "@/types/commerce";
 import { formatDistance } from "@/lib/geo";
 import { RouteResult } from "@/lib/routing";
+import { Lang, t } from "@/lib/translations";
 
 interface Props {
   commerce: Commerce;
@@ -12,6 +13,7 @@ interface Props {
   route: RouteResult | null;
   loadingRoute: boolean;
   hasUserPos: boolean;
+  lang: Lang;
   onNavigate: () => void;
   onClose: () => void;
 }
@@ -30,6 +32,7 @@ export default function CommerceCard({
   route,
   loadingRoute,
   hasUserPos,
+  lang,
   onNavigate,
   onClose,
 }: Props) {
@@ -131,9 +134,9 @@ export default function CommerceCard({
                     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
                     <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
                   </svg>
-                  Trazando ruta...
+                  {t("tracingRoute", lang)}
                 </span>
-              ) : route ? "Recalcular ruta" : "Cómo llegar"}
+              ) : route ? t("recalcRoute", lang) : t("getDirections", lang)}
             </button>
           ) : (
             <a
@@ -142,7 +145,7 @@ export default function CommerceCard({
               rel="noopener noreferrer"
               className="block w-full text-center py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl active:scale-[0.98] transition-all text-sm"
             >
-              Cómo llegar
+              {t("getDirections", lang)}
             </a>
           )}
         </div>

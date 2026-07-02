@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Commerce } from "@/types/commerce";
 import { formatDistance } from "@/lib/geo";
+import { Lang, t } from "@/lib/translations";
 
 interface Props {
   commerces: Commerce[];
@@ -11,6 +12,7 @@ interface Props {
   open: boolean;
   onToggle: () => void;
   onSelect: (c: Commerce) => void;
+  lang: Lang;
 }
 
 export default function CommerceList({
@@ -19,6 +21,7 @@ export default function CommerceList({
   open,
   onToggle,
   onSelect,
+  lang,
 }: Props) {
   const [search, setSearch] = useState("");
 
@@ -38,7 +41,7 @@ export default function CommerceList({
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
-        {commerces.length} comercios cercanos
+        {commerces.length} {t("nearbyCommerces", lang)}
         <svg className={`w-3.5 h-3.5 transition-transform ${open ? "" : "rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
         </svg>
@@ -55,7 +58,7 @@ export default function CommerceList({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar comercio..."
+                placeholder={t("searchPlaceholder", lang)}
                 className="w-full pl-9 pr-8 py-2 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-xs placeholder-gray-600 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none"
               />
               {search && (
@@ -69,7 +72,7 @@ export default function CommerceList({
           <div className="overflow-y-auto flex-1">
             {filtered.length === 0 ? (
               <div className="px-4 py-8 text-center">
-                <p className="text-gray-600 text-xs">No se encontraron comercios</p>
+                <p className="text-gray-600 text-xs">{t("noResults", lang)}</p>
               </div>
             ) : (
               filtered.map((c, i) => {
