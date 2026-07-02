@@ -20,10 +20,10 @@ export default function CommerceList({
   onSelect,
 }: Props) {
   return (
-    <div className="absolute top-0 left-0 right-0 z-[900] flex flex-col items-center pointer-events-none">
+    <div className="absolute top-0 left-0 right-0 z-[900] flex flex-col items-center pointer-events-none safe-top">
       <button
         onClick={onToggle}
-        className="pointer-events-auto mt-3 flex items-center gap-2 bg-[#141414] border border-[#2A2A2A] px-5 py-2.5 rounded-full shadow-lg text-xs font-semibold text-[#D4AF37] hover:bg-[#1A1A1A] transition-colors"
+        className="pointer-events-auto mt-3 flex items-center gap-2 bg-[#141414] border border-[#2A2A2A] px-5 py-2.5 rounded-full shadow-lg text-xs font-semibold text-[#D4AF37] hover:bg-[#1A1A1A] transition-colors active:scale-95"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -42,7 +42,7 @@ export default function CommerceList({
               <button
                 key={c.id}
                 onClick={() => onSelect(c)}
-                className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-[#1A1A1A] transition-colors text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3.5 active:bg-[#1A1A1A] transition-colors text-left ${
                   i < commerces.length - 1 ? "border-b border-[#1A1A1A]" : ""
                 }`}
               >

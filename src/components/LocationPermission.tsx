@@ -24,7 +24,7 @@ export default function LocationPermission({ onSetLocation, onSkip }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] bg-[#0A0A0A]/95 flex items-end sm:items-center justify-center p-4">
+    <div className="fixed inset-0 z-[2000] bg-[#0A0A0A]/95 flex items-end sm:items-center justify-center p-4 safe-bottom">
       <div className="w-full max-w-sm bg-[#141414] border border-[#2A2A2A] rounded-2xl p-6 space-y-5">
         <div className="text-center">
           <img src="/goldaxis-logo.png" alt="GoldAxis" className="w-14 h-14 mx-auto mb-1 object-contain" />
@@ -47,13 +47,13 @@ export default function LocationPermission({ onSetLocation, onSkip }: Props) {
           <button
             onClick={handleConfirm}
             disabled={!coords}
-            className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl hover:from-[#E5C04B] hover:to-[#D4AF37] transition-all text-sm disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl active:scale-[0.98] transition-all text-sm disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Confirm location
           </button>
           <button
             onClick={onSkip}
-            className="w-full py-3 bg-[#1A1A1A] text-gray-400 rounded-xl border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors text-sm"
+            className="w-full py-3.5 bg-[#1A1A1A] text-gray-400 rounded-xl border border-[#2A2A2A] active:border-[#3A3A3A] transition-colors text-sm"
           >
             Skip for now
           </button>

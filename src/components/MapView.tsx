@@ -216,10 +216,10 @@ export default function MapView() {
 
       {/* Home & change location */}
       {userAddress && !showOnboarding && (
-        <div className="absolute bottom-4 left-4 z-[900] flex items-center gap-2">
+        <div className="absolute bottom-4 left-4 z-[900] flex items-center gap-2 safe-bottom">
           <button
             onClick={() => setGoHomeTrigger((n) => n + 1)}
-            className="bg-[#141414] border border-[#2A2A2A] w-10 h-10 rounded-full flex items-center justify-center text-[#D4AF37] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/30 transition-all shadow-lg"
+            className="bg-[#141414] border border-[#2A2A2A] w-11 h-11 rounded-full flex items-center justify-center text-[#D4AF37] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/30 transition-all shadow-lg"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
@@ -228,7 +228,7 @@ export default function MapView() {
           </button>
           <button
             onClick={handleChangeLocation}
-            className="bg-[#141414] border border-[#2A2A2A] px-3 py-2 rounded-xl text-xs text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all flex items-center gap-1.5 shadow-lg"
+            className="bg-[#141414] border border-[#2A2A2A] px-3 py-2.5 rounded-xl text-xs text-gray-400 active:text-[#D4AF37] active:border-[#D4AF37]/30 transition-all flex items-center gap-1.5 shadow-lg"
           >
             <span className="max-w-[120px] truncate">{userAddress}</span>
             <svg className="w-3 h-3 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">

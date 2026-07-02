@@ -39,8 +39,8 @@ export default function CommerceCard({
     <div className="fixed top-0 left-0 right-0 z-[1000] p-3 pt-[env(safe-area-inset-top,12px)]">
       {/* Lightbox */}
       {lightbox && commerce.image && (
-        <div className="fixed inset-0 z-[2000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setLightbox(false)}>
-          <button className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-lg">✕</button>
+        <div className="fixed inset-0 z-[2000] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 safe-top safe-bottom" onClick={() => setLightbox(false)}>
+          <button className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white active:bg-white/20 transition-colors text-lg safe-top">✕</button>
           <div className="relative w-full max-w-lg aspect-square">
             <Image src={commerce.image} alt={commerce.name} fill className="object-contain" />
           </div>
@@ -49,7 +49,7 @@ export default function CommerceCard({
 
       <div className="mx-auto max-w-lg bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden relative">
         {/* Close button (over image) */}
-        <button onClick={onClose} className="absolute top-3 right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-gray-500 hover:text-white transition-colors text-xs">
+        <button onClick={onClose} className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-gray-500 active:text-white transition-colors text-xs">
           ✕
         </button>
         {/* Commerce image banner */}
@@ -123,7 +123,7 @@ export default function CommerceCard({
             <button
               onClick={onNavigate}
               disabled={loadingRoute}
-              className="block w-full text-center py-3 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl hover:from-[#E5C04B] hover:to-[#D4AF37] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="block w-full text-center py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {loadingRoute ? (
                 <span className="flex items-center justify-center gap-2">
@@ -140,7 +140,7 @@ export default function CommerceCard({
               href={`https://www.google.com/maps/dir/?api=1&destination=${commerce.lat},${commerce.lng}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full text-center py-3 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl hover:from-[#E5C04B] hover:to-[#D4AF37] transition-all text-sm"
+              className="block w-full text-center py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-semibold rounded-xl active:scale-[0.98] transition-all text-sm"
             >
               Cómo llegar
             </a>
