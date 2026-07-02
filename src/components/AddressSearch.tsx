@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Lang, t } from "@/lib/translations";
+import { PROVINCES } from "@/lib/provinces";
 
 export const COUNTRIES = [
   { code: "us", name: "United States", flag: "🇺🇸", dial: "+1" },
@@ -74,15 +75,10 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
 
   // Cascading selects state (public map)
   const [provinces, setProvinces] = useState<GeoOption[]>([]);
-  const [cities, setCities] = useState<GeoOption[]>([]);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
-  const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [provinceOpen, setProvinceOpen] = useState(false);
-  const [cityOpen, setCityOpen] = useState(false);
   const [loadingProvinces, setLoadingProvinces] = useState(false);
-  const [loadingCities, setLoadingCities] = useState(false);
   const provinceRef = useRef<HTMLDivElement>(null);
-  const cityRef = useRef<HTMLDivElement>(null);
 
   // Text search state (admin)
   const [query, setQuery] = useState(value);
@@ -96,11 +92,15 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   }, [value]);
 
   useEffect(() => {
+    if (cascading) loadProvinces(country);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
       if (countryRef.current && !countryRef.current.contains(e.target as Node)) setCountryOpen(false);
       if (provinceRef.current && !provinceRef.current.contains(e.target as Node)) setProvinceOpen(false);
-      if (cityRef.current && !cityRef.current.contains(e.target as Node)) setCityOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -108,44 +108,10 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
 
   const selectedCountry = COUNTRIES.find((c) => c.code === country);
 
-  async function fetchProvinces(countryName: string) {
-    setLoadingProvinces(true);
-    setProvinces([]);
+  function loadProvinces(countryCode: string) {
+    setProvinces(PROVINCES[countryCode] || []);
     setSelectedProvince(null);
-    setCities([]);
-    setSelectedCity(null);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
-          new URLSearchParams({ country: countryName, featuretype: "state", format: "json", limit: "50" }),
-        { headers: { "Accept-Language": lang } }
-      );
-      const data: NominatimResult[] = await res.json();
-      const opts = data
-        .map((r) => ({ name: r.display_name.split(",")[0].trim(), lat: parseFloat(r.lat), lng: parseFloat(r.lon) }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-      setProvinces(opts);
-    } catch { /* ignore */ }
     setLoadingProvinces(false);
-  }
-
-  async function fetchCities(provinceName: string, countryName: string) {
-    setLoadingCities(true);
-    setCities([]);
-    setSelectedCity(null);
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
-          new URLSearchParams({ state: provinceName, country: countryName, featuretype: "city", format: "json", limit: "50" }),
-        { headers: { "Accept-Language": lang } }
-      );
-      const data: NominatimResult[] = await res.json();
-      const opts = data
-        .map((r) => ({ name: r.display_name.split(",")[0].trim(), lat: parseFloat(r.lat), lng: parseFloat(r.lon) }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-      setCities(opts);
-    } catch { /* ignore */ }
-    setLoadingCities(false);
   }
 
   function handleCountrySelect(code: string) {
@@ -153,8 +119,8 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     setCountryOpen(false);
     const c = COUNTRIES.find((c) => c.code === code);
     if (c && onCountryChange) onCountryChange(c.dial);
-    if (showCountrySelect && c) {
-      fetchProvinces(c.name);
+    if (cascading) {
+      loadProvinces(code);
     }
     // Reset text search for admin
     setQuery("");
@@ -165,16 +131,8 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   function handleProvinceSelect(prov: GeoOption) {
     setSelectedProvince(prov.name);
     setProvinceOpen(false);
-    setCities([]);
-    setSelectedCity(null);
-    if (selectedCountry) fetchCities(prov.name, selectedCountry.name);
-  }
-
-  function handleCitySelect(city: GeoOption) {
-    setSelectedCity(city.name);
-    setCityOpen(false);
-    const addr = `${city.name}, ${selectedProvince}, ${selectedCountry?.name}`;
-    onSelect(addr, city.lat, city.lng);
+    const addr = `${prov.name}, ${selectedCountry?.name}`;
+    onSelect(addr, prov.lat, prov.lng);
   }
 
   // Admin text search handlers
@@ -287,45 +245,6 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
             )}
           </div>
 
-          {/* City / Neighborhood */}
-          <div ref={cityRef} className="relative">
-            <button
-              type="button"
-              onClick={() => cities.length > 0 && setCityOpen((v) => !v)}
-              disabled={cities.length === 0 && !loadingCities}
-              className={`${dropdownBtnClass} ${selectedCity ? "text-white" : "text-gray-500"} disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              <svg className="w-4 h-4 text-[#D4AF37] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span className="flex-1 text-left">
-                {loadingCities ? t("loadingCities", lang) : selectedCity || t("selectCity", lang)}
-              </span>
-              {loadingCities ? <Spinner /> : <ChevronIcon open={cityOpen} />}
-            </button>
-            {cityOpen && (
-              <div className={dropdownListClass}>
-                {cities.map((c) => (
-                  <button
-                    key={c.name}
-                    type="button"
-                    onClick={() => handleCitySelect(c)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 ${
-                      c.name === selectedCity ? "bg-[#D4AF37]/10 text-[#D4AF37]" : "text-white hover:bg-[#1A1A1A] active:bg-[#1A1A1A]"
-                    }`}
-                  >
-                    <span className="text-sm flex-1">{c.name}</span>
-                    {c.name === selectedCity && (
-                      <svg className="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </>
       )}
 
