@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Commerce } from "@/types/commerce";
 import { formatDistance } from "@/lib/geo";
@@ -19,6 +20,15 @@ export default function CommerceList({
   onToggle,
   onSelect,
 }: Props) {
+  const [search, setSearch] = useState("");
+
+  const filtered = search
+    ? commerces.filter((c) => {
+        const q = search.toLowerCase();
+        return c.name.toLowerCase().includes(q) || c.type.toLowerCase().includes(q) || c.address.toLowerCase().includes(q);
+      })
+    : commerces;
+
   return (
     <div className="absolute top-0 left-0 right-0 z-[900] flex flex-col items-center pointer-events-none safe-top">
       <button
@@ -35,35 +45,63 @@ export default function CommerceList({
       </button>
 
       {open && (
-        <div className="pointer-events-auto w-[calc(100%-2rem)] max-w-lg mt-2 mx-4 bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-y-auto max-h-[50vh]">
-          {commerces.map((c, i) => {
-            const dist = getDistance(c);
-            return (
-              <button
-                key={c.id}
-                onClick={() => onSelect(c)}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 active:bg-[#1A1A1A] transition-colors text-left ${
-                  i < commerces.length - 1 ? "border-b border-[#1A1A1A]" : ""
-                }`}
-              >
-                <div className="w-9 h-9 rounded-lg overflow-hidden bg-[#0A0A0A] border border-[#2A2A2A] flex-shrink-0 relative">
-                  <Image src={c.logo} alt={c.name} fill className="object-cover" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-white text-sm truncate">{c.name}</div>
-                  <div className="text-[11px] text-gray-500 truncate">{c.type} &middot; {c.address}</div>
-                </div>
-                {dist !== null && (
-                  <span className="text-[11px] font-semibold text-[#D4AF37] flex-shrink-0">
-                    {formatDistance(dist)}
-                  </span>
-                )}
-                <svg className="w-3.5 h-3.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            );
-          })}
+        <div className="pointer-events-auto w-[calc(100%-2rem)] max-w-lg mt-2 mx-4 bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[55vh]">
+          <div className="px-3 pt-3 pb-2 border-b border-[#1A1A1A] flex-shrink-0">
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar comercio..."
+                className="w-full pl-9 pr-8 py-2 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl text-white text-xs placeholder-gray-600 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none"
+              />
+              {search && (
+                <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center rounded-full bg-[#2A2A2A] text-gray-500 active:text-white text-[9px]">
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-y-auto flex-1">
+            {filtered.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-gray-600 text-xs">No se encontraron comercios</p>
+              </div>
+            ) : (
+              filtered.map((c, i) => {
+                const dist = getDistance(c);
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => onSelect(c)}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 active:bg-[#1A1A1A] transition-colors text-left ${
+                      i < filtered.length - 1 ? "border-b border-[#1A1A1A]" : ""
+                    }`}
+                  >
+                    <div className="w-9 h-9 rounded-lg overflow-hidden bg-[#0A0A0A] border border-[#2A2A2A] flex-shrink-0 relative">
+                      <Image src={c.logo} alt={c.name} fill className="object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-white text-sm truncate">{c.name}</div>
+                      <div className="text-[11px] text-gray-500 truncate">{c.type} &middot; {c.address}</div>
+                    </div>
+                    {dist !== null && (
+                      <span className="text-[11px] font-semibold text-[#D4AF37] flex-shrink-0">
+                        {formatDistance(dist)}
+                      </span>
+                    )}
+                    <svg className="w-3.5 h-3.5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                );
+              })
+            )}
+          </div>
         </div>
       )}
     </div>
