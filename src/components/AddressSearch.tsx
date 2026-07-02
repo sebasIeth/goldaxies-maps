@@ -208,13 +208,13 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
       </div>
 
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl overflow-hidden shadow-2xl z-50">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-[#0E0E0E] border border-[#2A2A2A] rounded-xl overflow-hidden shadow-2xl z-50 max-h-[260px] overflow-y-auto">
           {results.map((r) => (
             <button
               key={r.place_id}
               type="button"
               onClick={() => handleSelect(r)}
-              className="w-full text-left px-4 py-3 hover:bg-[#252525] active:bg-[#252525] transition-colors border-b border-[#222] last:border-b-0 flex items-start gap-2.5"
+              className="w-full text-left px-4 py-3 hover:bg-[#1A1A1A] active:bg-[#1A1A1A] transition-colors border-b border-[#1A1A1A] last:border-b-0 flex items-start gap-2.5"
             >
               <svg
                 className="w-4 h-4 text-[#D4AF37] mt-0.5 flex-shrink-0"
@@ -239,7 +239,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
                 <p className="text-white text-sm truncate">
                   {r.display_name.split(",").slice(0, 2).join(",")}
                 </p>
-                <p className="text-gray-500 text-[11px] truncate">
+                <p className="text-gray-500 text-[11px] truncate mt-0.5">
                   {r.display_name}
                 </p>
               </div>
