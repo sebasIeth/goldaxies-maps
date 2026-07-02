@@ -729,7 +729,7 @@ export default function AdminPage() {
             </div>
 
             {showForm && (
-              <section className="bg-[#111] border border-white/5 rounded-2xl overflow-hidden">
+              <section className="bg-[#111] border border-white/5 rounded-2xl overflow-visible">
                 <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${editingId ? "bg-amber-400" : "bg-emerald-400"}`} />
