@@ -36,7 +36,7 @@ export default function LocationPermission({ onSetLocation, onSkip, lang }: Prop
           </p>
         </div>
 
-        <AddressSearch value={address} onSelect={handleSelect} showCountrySelect lang={lang} />
+        <AddressSearch value={address} onSelect={handleSelect} showCountrySelect cascading lang={lang} />
 
         {coords && (
           <div className="flex items-center gap-1.5">
