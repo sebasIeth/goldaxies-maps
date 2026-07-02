@@ -20,6 +20,7 @@ export async function GET() {
     lng: d.lng,
     logo: d.logo || "/logos/market.svg",
     phone: d.phone || "",
+    image: d.image || "",
   }));
 
   return Response.json(commerces);
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   if (authError) return authError;
 
   const body = await req.json();
-  const { name, type, description, address, lat, lng, logo, phone } = body;
+  const { name, type, description, address, lat, lng, logo, phone, image } = body;
 
   if (!name || !type || !address || lat == null || lng == null) {
     return Response.json(
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
     lng: Number(lng),
     logo: logo || "/logos/market.svg",
     phone: phone || "",
+    image: image || "",
     createdAt: new Date(),
   };
 
@@ -91,6 +93,7 @@ export async function PUT(req: NextRequest) {
   if (updates.lng != null) setFields.lng = Number(updates.lng);
   if (updates.logo != null) setFields.logo = updates.logo;
   if (updates.phone != null) setFields.phone = updates.phone;
+  if (updates.image != null) setFields.image = updates.image;
   setFields.updatedAt = new Date();
 
   const result = await db
@@ -115,6 +118,7 @@ export async function PUT(req: NextRequest) {
     lng: result.lng,
     logo: result.logo,
     phone: result.phone || "",
+    image: result.image || "",
   });
 }
 

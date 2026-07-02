@@ -34,21 +34,29 @@ export default function CommerceCard({
 }: Props) {
   return (
     <div className="fixed top-0 left-0 right-0 z-[1000] p-3 pt-[env(safe-area-inset-top,12px)]">
-      <div className="mx-auto max-w-lg bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden">
+      <div className="mx-auto max-w-lg bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden relative">
+        {/* Close button (over image) */}
+        <button onClick={onClose} className="absolute top-3 right-3 z-20 w-7 h-7 flex items-center justify-center rounded-full bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-gray-500 hover:text-white transition-colors text-xs">
+          ✕
+        </button>
+        {/* Commerce image banner */}
+        {commerce.image && (
+          <div className="relative w-full h-36">
+            <Image src={commerce.image} alt={commerce.name} fill className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#141414] to-transparent" />
+          </div>
+        )}
         {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <div className={`flex items-center justify-between px-4 pb-2 ${commerce.image ? "-mt-8 relative z-10" : "pt-4"}`}>
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#0A0A0A] border border-[#2A2A2A] flex-shrink-0 relative">
-              <Image src={commerce.logo} alt={commerce.name} fill className="object-cover" />
+              <Image src={commerce.image || commerce.logo} alt={commerce.name} fill className={commerce.image ? "object-cover" : "object-cover p-1"} />
             </div>
             <div>
               <h3 className="font-bold text-white text-base leading-tight">{commerce.name}</h3>
               <span className="text-xs text-[#D4AF37] font-medium">{commerce.type}</span>
             </div>
           </div>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full bg-[#1A1A1A] border border-[#2A2A2A] text-gray-500 hover:text-white transition-colors text-xs">
-            ✕
-          </button>
         </div>
 
         {/* Description */}

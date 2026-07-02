@@ -42,6 +42,12 @@ const t = {
     selectCategory: "Select a category...",
     description: "Description",
     descriptionPlaceholder: "What does this commerce offer? Any token benefits?",
+    image: "Commerce image",
+    uploadImage: "Upload image",
+    changeImage: "Change image",
+    uploading: "Uploading...",
+    imageUploaded: "Image uploaded",
+    orUseCategory: "Or use a category icon:",
     phone: "Phone number",
     phonePlaceholder: "e.g. +1 555 123 4567",
     address: "Address",
@@ -113,6 +119,12 @@ const t = {
     selectCategory: "Selecciona una categoria...",
     description: "Descripcion",
     descriptionPlaceholder: "Que ofrece este comercio? Algun beneficio con token?",
+    image: "Imagen del comercio",
+    uploadImage: "Subir imagen",
+    changeImage: "Cambiar imagen",
+    uploading: "Subiendo...",
+    imageUploaded: "Imagen subida",
+    orUseCategory: "O usar icono de categoria:",
     phone: "Numero de telefono",
     phonePlaceholder: "Ej: +57 300 123 4567",
     address: "Direccion",
@@ -200,6 +212,7 @@ const EMPTY_FORM = {
   lat: "",
   lng: "",
   logo: "/logos/cafe.svg",
+  image: "",
 };
 
 const EMPTY_USER_FORM = { name: "", email: "", password: "" };
@@ -224,6 +237,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<"commerces" | "users">("commerces");
   const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => void; variant?: "danger" | "warning" } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editUserForm, setEditUserForm] = useState({ name: "", password: "" });
   const [editUserLoading, setEditUserLoading] = useState(false);
@@ -334,6 +348,7 @@ export default function AdminPage() {
     setForm({
       name: c.name, type: c.type, description: c.description, phone: c.phone || "",
       address: c.address, lat: c.lat.toString(), lng: c.lng.toString(), logo: c.logo,
+      image: c.image || "",
     });
     setShowForm(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -348,6 +363,26 @@ export default function AdminPage() {
         await fetchCommerces();
       } else showMsgFn(l.errorDeleting, false);
     });
+  }
+
+  async function handleImageUpload(file: File) {
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      if (res.ok) {
+        const { url } = await res.json();
+        setForm((f) => ({ ...f, image: url, logo: url }));
+        showMsgFn(l.imageUploaded, true);
+      } else {
+        const { error } = await res.json();
+        showMsgFn(error || "Upload failed", false);
+      }
+    } catch {
+      showMsgFn("Upload failed", false);
+    }
+    setUploadingImage(false);
   }
 
   function handleCancel() {
@@ -652,10 +687,39 @@ export default function AdminPage() {
                     <input type="text" required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder={l.commerceNamePlaceholder} className="w-full px-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none transition-all" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.category}</label>
+                    <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.image}</label>
+                    {form.image ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-16 h-16 rounded-xl overflow-hidden border border-[#D4AF37]/30 relative flex-shrink-0">
+                          <Image src={form.image} alt="Commerce" fill className="object-cover" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="px-3 py-1.5 bg-[#0A0A0A] border border-white/10 rounded-lg text-xs text-gray-400 hover:text-[#D4AF37] hover:border-[#D4AF37]/30 transition-all cursor-pointer">
+                            {l.changeImage}
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+                          </label>
+                          <button type="button" onClick={() => setForm((f) => ({ ...f, image: "", logo: CATEGORIES.find((c) => c.value === f.type)?.logo || "/logos/cafe.svg" }))} className="text-[10px] text-gray-600 hover:text-red-400 transition-colors text-left">
+                            {lang === "es" ? "Quitar imagen" : "Remove image"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className={`flex flex-col items-center gap-2 p-4 border border-dashed rounded-xl cursor-pointer transition-all ${uploadingImage ? "border-[#D4AF37]/30 bg-[#D4AF37]/5" : "border-white/10 hover:border-[#D4AF37]/30 hover:bg-[#D4AF37]/5"}`}>
+                        {uploadingImage ? (
+                          <svg className="w-6 h-6 text-[#D4AF37] animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" /><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" /></svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                        )}
+                        <span className="text-xs text-gray-500">{uploadingImage ? l.uploading : l.uploadImage}</span>
+                        <input type="file" accept="image/*" className="hidden" disabled={uploadingImage} onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+                      </label>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{form.image ? l.category : l.orUseCategory}</label>
                     <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-7 gap-2">
                       {CATEGORIES.map((cat) => (
-                        <button key={cat.value} type="button" onClick={() => setForm((f) => ({ ...f, type: cat.value, logo: cat.logo }))} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${form.type === cat.value ? "border-[#D4AF37]/50 bg-[#D4AF37]/5 shadow-lg shadow-[#D4AF37]/5" : "border-white/5 bg-[#0A0A0A] hover:border-white/10"}`}>
+                        <button key={cat.value} type="button" onClick={() => setForm((f) => ({ ...f, type: cat.value, logo: f.image || cat.logo }))} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${form.type === cat.value ? "border-[#D4AF37]/50 bg-[#D4AF37]/5 shadow-lg shadow-[#D4AF37]/5" : "border-white/5 bg-[#0A0A0A] hover:border-white/10"}`}>
                           <div className="w-9 h-9 relative"><Image src={cat.logo} alt={cat.label[lang]} fill className="object-contain" /></div>
                           <span className={`text-[10px] font-medium ${form.type === cat.value ? "text-[#D4AF37]" : "text-gray-600"}`}>{cat.label[lang]}</span>
                         </button>
