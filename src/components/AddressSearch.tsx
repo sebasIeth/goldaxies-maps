@@ -3,27 +3,27 @@
 import { useState, useRef, useEffect } from "react";
 
 const COUNTRIES = [
-  { code: "us", name: "United States", flag: "🇺🇸" },
-  { code: "ar", name: "Argentina", flag: "🇦🇷" },
-  { code: "bo", name: "Bolivia", flag: "🇧🇴" },
-  { code: "br", name: "Brasil", flag: "🇧🇷" },
-  { code: "cl", name: "Chile", flag: "🇨🇱" },
-  { code: "co", name: "Colombia", flag: "🇨🇴" },
-  { code: "cr", name: "Costa Rica", flag: "🇨🇷" },
-  { code: "cu", name: "Cuba", flag: "🇨🇺" },
-  { code: "do", name: "Rep. Dominicana", flag: "🇩🇴" },
-  { code: "ec", name: "Ecuador", flag: "🇪🇨" },
-  { code: "sv", name: "El Salvador", flag: "🇸🇻" },
-  { code: "gt", name: "Guatemala", flag: "🇬🇹" },
-  { code: "hn", name: "Honduras", flag: "🇭🇳" },
-  { code: "mx", name: "Mexico", flag: "🇲🇽" },
-  { code: "ni", name: "Nicaragua", flag: "🇳🇮" },
-  { code: "pa", name: "Panama", flag: "🇵🇦" },
-  { code: "py", name: "Paraguay", flag: "🇵🇾" },
-  { code: "pe", name: "Peru", flag: "🇵🇪" },
-  { code: "pr", name: "Puerto Rico", flag: "🇵🇷" },
-  { code: "uy", name: "Uruguay", flag: "🇺🇾" },
-  { code: "ve", name: "Venezuela", flag: "🇻🇪" },
+  { code: "us", name: "United States", flag: "🇺🇸", dial: "+1" },
+  { code: "ar", name: "Argentina", flag: "🇦🇷", dial: "+54" },
+  { code: "bo", name: "Bolivia", flag: "🇧🇴", dial: "+591" },
+  { code: "br", name: "Brasil", flag: "🇧🇷", dial: "+55" },
+  { code: "cl", name: "Chile", flag: "🇨🇱", dial: "+56" },
+  { code: "co", name: "Colombia", flag: "🇨🇴", dial: "+57" },
+  { code: "cr", name: "Costa Rica", flag: "🇨🇷", dial: "+506" },
+  { code: "cu", name: "Cuba", flag: "🇨🇺", dial: "+53" },
+  { code: "do", name: "Rep. Dominicana", flag: "🇩🇴", dial: "+1" },
+  { code: "ec", name: "Ecuador", flag: "🇪🇨", dial: "+593" },
+  { code: "sv", name: "El Salvador", flag: "🇸🇻", dial: "+503" },
+  { code: "gt", name: "Guatemala", flag: "🇬🇹", dial: "+502" },
+  { code: "hn", name: "Honduras", flag: "🇭🇳", dial: "+504" },
+  { code: "mx", name: "Mexico", flag: "🇲🇽", dial: "+52" },
+  { code: "ni", name: "Nicaragua", flag: "🇳🇮", dial: "+505" },
+  { code: "pa", name: "Panama", flag: "🇵🇦", dial: "+507" },
+  { code: "py", name: "Paraguay", flag: "🇵🇾", dial: "+595" },
+  { code: "pe", name: "Peru", flag: "🇵🇪", dial: "+51" },
+  { code: "pr", name: "Puerto Rico", flag: "🇵🇷", dial: "+1" },
+  { code: "uy", name: "Uruguay", flag: "🇺🇾", dial: "+598" },
+  { code: "ve", name: "Venezuela", flag: "🇻🇪", dial: "+58" },
 ];
 
 interface NominatimResult {
@@ -37,9 +37,10 @@ interface Props {
   value: string;
   onSelect: (address: string, lat: number, lng: number) => void;
   showCountrySelect?: boolean;
+  onCountryChange?: (dialCode: string) => void;
 }
 
-export default function AddressSearch({ value, onSelect, showCountrySelect = false }: Props) {
+export default function AddressSearch({ value, onSelect, showCountrySelect = false, onCountryChange }: Props) {
   const [query, setQuery] = useState(value);
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [open, setOpen] = useState(false);
@@ -122,6 +123,8 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     setQuery("");
     setResults([]);
     setOpen(false);
+    const c = COUNTRIES.find((c) => c.code === code);
+    if (c && onCountryChange) onCountryChange(c.dial);
   }
 
   const selectedCountry = COUNTRIES.find((c) => c.code === country);
