@@ -244,6 +244,7 @@ export default function AdminPage() {
   const [confirmModal, setConfirmModal] = useState<{ message: string; onConfirm: () => void; variant?: "danger" | "warning" } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [dialCode, setDialCode] = useState("+1");
   const [showPreview, setShowPreview] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [editUserForm, setEditUserForm] = useState({ name: "", password: "" });
@@ -796,12 +797,12 @@ export default function AdminPage() {
                     <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.phone}</label>
                     <div className="relative">
                       <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                      <input type="tel" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} placeholder={l.phonePlaceholder} className="w-full pl-9 pr-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none transition-all" />
+                      <input type="tel" value={form.phone} onChange={(e) => { const v = e.target.value.replace(/[^0-9+\s]/g, ""); setForm((f) => ({ ...f, phone: v })); }} placeholder={`${dialCode} 300 123 4567`} className="w-full pl-9 pr-4 py-2.5 bg-[#0A0A0A] border border-white/5 rounded-xl text-white text-sm placeholder-gray-700 focus:ring-1 focus:ring-[#D4AF37]/50 focus:border-[#D4AF37]/30 outline-none transition-all" />
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">{l.address}</label>
-                    <AddressSearch value={form.address} onSelect={(address, lat, lng) => setForm((f) => ({ ...f, address, lat: lat.toString(), lng: lng.toString() }))} showCountrySelect onCountryChange={(dial) => setForm((f) => ({ ...f, phone: f.phone && !f.phone.startsWith("+") ? f.phone : dial + " " }))} />
+                    <AddressSearch value={form.address} onSelect={(address, lat, lng) => setForm((f) => ({ ...f, address, lat: lat.toString(), lng: lng.toString() }))} showCountrySelect onCountryChange={(dial) => { setDialCode(dial); setForm((f) => ({ ...f, phone: f.phone && !f.phone.startsWith("+") ? f.phone : dial + " " })); }} />
                     {form.lat && form.lng && (
                       <div className="flex items-center gap-1.5 mt-1">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
