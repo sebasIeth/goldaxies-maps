@@ -20,6 +20,10 @@ export const mapTranslations = {
   confirmLocation: { en: "Confirm location", es: "Confirmar ubicación" },
   skipForNow: { en: "Skip for now", es: "Omitir por ahora" },
   searchAddress: { en: "Search your address...", es: "Busca tu dirección..." },
+  settings: { en: "Settings", es: "Ajustes" },
+  language: { en: "Language", es: "Idioma" },
+  changeLocation: { en: "Change location", es: "Cambiar ubicación" },
+  noCitiesFound: { en: "No cities found", es: "No se encontraron ciudades" },
 } as const;
 
 export function t(key: keyof typeof mapTranslations, lang: Lang): string {

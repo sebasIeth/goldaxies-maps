@@ -174,6 +174,8 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     setProvinceOpen(false);
     setCities([]);
     setSelectedCity(null);
+    const addr = `${prov.name}, ${selectedCountry?.name}`;
+    onSelect(addr, prov.lat, prov.lng);
     fetchCities(prov.name, country);
   }
 
@@ -313,9 +315,9 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
             </button>
             {cityOpen && (
               <div className={dropdownListClass}>
-                {cities.map((c) => (
+                {cities.map((c, i) => (
                   <button
-                    key={c.name}
+                    key={`${c.name}-${i}`}
                     type="button"
                     onClick={() => handleCitySelect(c)}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 ${

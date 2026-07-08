@@ -129,6 +129,7 @@ export default function MapView() {
   const [listOpen, setListOpen] = useState(false);
   const [commerces, setCommerces] = useState<Commerce[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [settingsMode, setSettingsMode] = useState(false);
   const [ready, setReady] = useState(false);
   const [goHomeTrigger, setGoHomeTrigger] = useState(0);
   const [lang, setLang] = useState<Lang>("es");
@@ -160,20 +161,22 @@ export default function MapView() {
     setUserAddress(address);
     saveLocation(lat, lng, address);
     setShowOnboarding(false);
+    setSettingsMode(false);
   }
 
   function handleSkip() {
     setShowOnboarding(false);
+    setSettingsMode(false);
   }
 
-  function handleChangeLocation() {
+  function handleOpenSettings() {
+    setSettingsMode(true);
     setShowOnboarding(true);
   }
 
-  function toggleLang() {
-    const next = lang === "es" ? "en" : "es";
-    setLang(next);
-    localStorage.setItem(LANG_KEY, next);
+  function handleLangChange(newLang: Lang) {
+    setLang(newLang);
+    localStorage.setItem(LANG_KEY, newLang);
   }
 
   function getDistanceTo(c: Commerce): number | null {
@@ -208,9 +211,15 @@ export default function MapView() {
 
   return (
     <div className="relative w-full h-full bg-[#0A0A0A]">
-      {/* Address onboarding */}
+      {/* Address onboarding / Settings */}
       {showOnboarding && (
-        <LocationPermission onSetLocation={handleSetLocation} onSkip={handleSkip} lang={lang} />
+        <LocationPermission
+          onSetLocation={handleSetLocation}
+          onSkip={handleSkip}
+          lang={lang}
+          onLangChange={handleLangChange}
+          isSettings={settingsMode}
+        />
       )}
 
       {/* Loading route */}
@@ -224,37 +233,35 @@ export default function MapView() {
         </div>
       )}
 
-      {/* Home & change location */}
-      {userAddress && !showOnboarding && (
+      {/* Home & Settings */}
+      {!showOnboarding && (
         <div className="absolute bottom-4 left-4 z-[900] flex items-center gap-2 safe-bottom">
-          <button
-            onClick={() => setGoHomeTrigger((n) => n + 1)}
-            className="bg-[#141414] border border-[#2A2A2A] w-11 h-11 rounded-full flex items-center justify-center text-[#D4AF37] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/30 transition-all shadow-lg"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-            </svg>
-          </button>
-          <button
-            onClick={handleChangeLocation}
-            className="bg-[#141414] border border-[#2A2A2A] px-3 py-2.5 rounded-xl text-xs text-gray-400 active:text-[#D4AF37] active:border-[#D4AF37]/30 transition-all flex items-center gap-1.5 shadow-lg"
-          >
-            <span className="max-w-[120px] truncate">{userAddress}</span>
-            <svg className="w-3 h-3 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </button>
+          {userAddress && (
+            <button
+              onClick={() => setGoHomeTrigger((n) => n + 1)}
+              className="bg-[#141414] border border-[#2A2A2A] w-11 h-11 rounded-full flex items-center justify-center text-[#D4AF37] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/30 transition-all shadow-lg"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+              </svg>
+            </button>
+          )}
         </div>
       )}
 
-      {/* Language toggle */}
-      <button
-        onClick={toggleLang}
-        className="absolute bottom-4 right-4 z-[900] bg-[#141414] border border-[#2A2A2A] w-11 h-11 rounded-full flex items-center justify-center text-xs font-bold text-[#D4AF37] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/30 transition-all shadow-lg safe-bottom"
-      >
-        {lang === "es" ? "EN" : "ES"}
-      </button>
+      {/* Settings button */}
+      {!showOnboarding && (
+        <button
+          onClick={handleOpenSettings}
+          className="absolute bottom-4 right-4 z-[900] bg-[#141414] border border-[#2A2A2A] w-11 h-11 rounded-full flex items-center justify-center text-[#D4AF37] active:bg-[#D4AF37]/10 active:border-[#D4AF37]/30 transition-all shadow-lg safe-bottom"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+      )}
 
       <MapContainer
         center={userPos || DEFAULT_CENTER}
