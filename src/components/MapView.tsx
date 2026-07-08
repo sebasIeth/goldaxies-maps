@@ -126,7 +126,6 @@ export default function MapView() {
   const [selected, setSelected] = useState<Commerce | null>(null);
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
-  const [listOpen, setListOpen] = useState(false);
   const [commerces, setCommerces] = useState<Commerce[]>([]);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [settingsMode, setSettingsMode] = useState(false);
@@ -308,13 +307,10 @@ export default function MapView() {
         <CommerceList
           commerces={sorted}
           getDistance={getDistanceTo}
-          open={listOpen}
-          onToggle={() => setListOpen((v) => !v)}
           lang={lang}
           onSelect={(c) => {
             setSelected(c);
             setRoute(null);
-            setListOpen(false);
           }}
         />
       )}

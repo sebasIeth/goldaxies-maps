@@ -6,6 +6,7 @@ import { PROVINCES } from "@/lib/provinces";
 
 export const COUNTRIES = [
   { code: "us", name: "United States", flag: "🇺🇸", dial: "+1" },
+  { code: "sv", name: "El Salvador", flag: "🇸🇻", dial: "+503" },
   { code: "ar", name: "Argentina", flag: "🇦🇷", dial: "+54" },
   { code: "bo", name: "Bolivia", flag: "🇧🇴", dial: "+591" },
   { code: "br", name: "Brasil", flag: "🇧🇷", dial: "+55" },
@@ -15,7 +16,6 @@ export const COUNTRIES = [
   { code: "cu", name: "Cuba", flag: "🇨🇺", dial: "+53" },
   { code: "do", name: "Rep. Dominicana", flag: "🇩🇴", dial: "+1" },
   { code: "ec", name: "Ecuador", flag: "🇪🇨", dial: "+593" },
-  { code: "sv", name: "El Salvador", flag: "🇸🇻", dial: "+503" },
   { code: "gt", name: "Guatemala", flag: "🇬🇹", dial: "+502" },
   { code: "hn", name: "Honduras", flag: "🇭🇳", dial: "+504" },
   { code: "mx", name: "Mexico", flag: "🇲🇽", dial: "+52" },
@@ -82,6 +82,8 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
   const [cityOpen, setCityOpen] = useState(false);
   const [loadingProvinces, setLoadingProvinces] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
+  const [citiesFailed, setCitiesFailed] = useState(false);
+  const [manualCity, setManualCity] = useState("");
   const provinceRef = useRef<HTMLDivElement>(null);
   const cityRef = useRef<HTMLDivElement>(null);
 
@@ -133,8 +135,10 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     setLoadingCities(true);
     setCities([]);
     setSelectedCity(null);
+    setCitiesFailed(false);
+    setManualCity("");
     const iso = COUNTRY_ISO[countryCode] || countryCode.toUpperCase();
-    const query = `[out:json][timeout:25];area["ISO3166-1"="${iso}"]->.country;area["name"="${provinceName}"](area.country)->.state;(node(area.state)["place"~"city|town"];);out tags;`;
+    const query = `[out:json][timeout:25];area["ISO3166-1"="${iso}"]->.country;area["name"="${provinceName}"](area.country)->.state;(node(area.state)["place"~"city|town|village"];);out tags;`;
     try {
       const res = await fetch("https://overpass-api.de/api/interpreter", {
         method: "POST",
@@ -151,7 +155,10 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
         }))
         .sort((a: GeoOption, b: GeoOption) => a.name.localeCompare(b.name));
       setCities(opts);
-    } catch { /* ignore */ }
+      if (opts.length === 0) setCitiesFailed(true);
+    } catch {
+      setCitiesFailed(true);
+    }
     setLoadingCities(false);
   }
 
@@ -184,6 +191,17 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     setCityOpen(false);
     const addr = `${city.name}, ${selectedProvince}, ${selectedCountry?.name}`;
     onSelect(addr, city.lat, city.lng);
+  }
+
+  function handleManualCityChange(val: string) {
+    setManualCity(val);
+    if (val.trim()) {
+      const prov = provinces.find((p) => p.name === selectedProvince);
+      if (prov) {
+        const addr = `${val.trim()}, ${selectedProvince}, ${selectedCountry?.name}`;
+        onSelect(addr, prov.lat, prov.lng);
+      }
+    }
   }
 
   // Admin text search handlers
@@ -296,45 +314,63 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
             )}
           </div>
 
-          {/* City / Town */}
-          <div ref={cityRef} className="relative">
-            <button
-              type="button"
-              onClick={() => cities.length > 0 && setCityOpen((v) => !v)}
-              disabled={cities.length === 0 && !loadingCities}
-              className={`${dropdownBtnClass} ${selectedCity ? "text-white" : "text-gray-500"} disabled:opacity-40 disabled:cursor-not-allowed`}
-            >
-              <svg className="w-4 h-4 text-[#D4AF37] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span className="flex-1 text-left">
-                {loadingCities ? t("loadingCities", lang) : selectedCity || t("selectCity", lang)}
-              </span>
-              {loadingCities ? <Spinner /> : <ChevronIcon open={cityOpen} />}
-            </button>
-            {cityOpen && (
-              <div className={dropdownListClass}>
-                {cities.map((c, i) => (
-                  <button
-                    key={`${c.name}-${i}`}
-                    type="button"
-                    onClick={() => handleCitySelect(c)}
-                    className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 ${
-                      c.name === selectedCity ? "bg-[#D4AF37]/10 text-[#D4AF37]" : "text-white hover:bg-[#1A1A1A] active:bg-[#1A1A1A]"
-                    }`}
-                  >
-                    <span className="text-sm flex-1">{c.name}</span>
-                    {c.name === selectedCity && (
-                      <svg className="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
+          {/* City / Town — dropdown or manual input fallback */}
+          {citiesFailed && selectedProvince ? (
+            <div className="relative">
+              <div className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl">
+                <svg className="w-4 h-4 text-[#D4AF37] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <input
+                  type="text"
+                  value={manualCity}
+                  onChange={(e) => handleManualCityChange(e.target.value)}
+                  placeholder={t("selectCity", lang)}
+                  className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 outline-none"
+                />
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div ref={cityRef} className="relative">
+              <button
+                type="button"
+                onClick={() => cities.length > 0 && setCityOpen((v) => !v)}
+                disabled={cities.length === 0 && !loadingCities}
+                className={`${dropdownBtnClass} ${selectedCity ? "text-white" : "text-gray-500"} disabled:opacity-40 disabled:cursor-not-allowed`}
+              >
+                <svg className="w-4 h-4 text-[#D4AF37] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span className="flex-1 text-left">
+                  {loadingCities ? t("loadingCities", lang) : selectedCity || t("selectCity", lang)}
+                </span>
+                {loadingCities ? <Spinner /> : <ChevronIcon open={cityOpen} />}
+              </button>
+              {cityOpen && (
+                <div className={dropdownListClass}>
+                  {cities.map((c, i) => (
+                    <button
+                      key={`${c.name}-${i}`}
+                      type="button"
+                      onClick={() => handleCitySelect(c)}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 ${
+                        c.name === selectedCity ? "bg-[#D4AF37]/10 text-[#D4AF37]" : "text-white hover:bg-[#1A1A1A] active:bg-[#1A1A1A]"
+                      }`}
+                    >
+                      <span className="text-sm flex-1">{c.name}</span>
+                      {c.name === selectedCity && (
+                        <svg className="w-4 h-4 text-[#D4AF37]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </>
       )}
 
