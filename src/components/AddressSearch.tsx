@@ -138,7 +138,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     setCitiesFailed(false);
     setManualCity("");
     const iso = COUNTRY_ISO[countryCode] || countryCode.toUpperCase();
-    const query = `[out:json][timeout:25];area["ISO3166-1"="${iso}"]->.country;area["name"="${provinceName}"](area.country)->.state;(node(area.state)["place"~"city|town|village"];);out tags;`;
+    const query = `[out:json][timeout:25];area["ISO3166-1"="${iso}"]->.country;area["name"="${provinceName}"](area.country)->.state;(node(area.state)["place"~"city|town|village"];);out body;`;
     try {
       const res = await fetch("https://overpass-api.de/api/interpreter", {
         method: "POST",
