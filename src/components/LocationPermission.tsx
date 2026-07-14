@@ -21,6 +21,11 @@ export default function LocationPermission({ onSetLocation, onSkip, lang, onLang
     setCoords({ lat, lng });
   }
 
+  function handleReset() {
+    setAddress("");
+    setCoords(null);
+  }
+
   function handleConfirm() {
     if (coords) {
       onSetLocation(coords.lat, coords.lng, address);
@@ -77,7 +82,7 @@ export default function LocationPermission({ onSetLocation, onSkip, lang, onLang
           </div>
         )}
 
-        <AddressSearch value={address} onSelect={handleSelect} showCountrySelect cascading lang={lang} />
+        <AddressSearch value={address} onSelect={handleSelect} onReset={handleReset} showCountrySelect cascading lang={lang} />
 
         {coords && (
           <div className="flex items-center gap-1.5">

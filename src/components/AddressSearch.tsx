@@ -44,6 +44,7 @@ interface GeoOption {
 interface Props {
   value: string;
   onSelect: (address: string, lat: number, lng: number) => void;
+  onReset?: () => void;
   showCountrySelect?: boolean;
   cascading?: boolean;
   onCountryChange?: (dialCode: string) => void;
@@ -67,7 +68,7 @@ function Spinner() {
   );
 }
 
-export default function AddressSearch({ value, onSelect, showCountrySelect = false, cascading = false, onCountryChange, lang = "es" }: Props) {
+export default function AddressSearch({ value, onSelect, onReset, showCountrySelect = false, cascading = false, onCountryChange, lang = "es" }: Props) {
   const [country, setCountry] = useState("us");
   const [countryOpen, setCountryOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -169,6 +170,7 @@ export default function AddressSearch({ value, onSelect, showCountrySelect = fal
     if (c && onCountryChange) onCountryChange(c.dial);
     if (cascading) {
       loadProvinces(code);
+      if (onReset) onReset();
     }
     // Reset text search for admin
     setQuery("");
