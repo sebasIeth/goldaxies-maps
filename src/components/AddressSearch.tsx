@@ -85,6 +85,11 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
   const [loadingCities, setLoadingCities] = useState(false);
   const [citiesFailed, setCitiesFailed] = useState(false);
   const [manualCity, setManualCity] = useState("");
+  const [manualResults, setManualResults] = useState<GeoOption[]>([]);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [loadingManual, setLoadingManual] = useState(false);
+  const manualRef = useRef<HTMLDivElement>(null);
+  const manualDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const provinceRef = useRef<HTMLDivElement>(null);
   const cityRef = useRef<HTMLDivElement>(null);
 
@@ -110,6 +115,7 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
       if (countryRef.current && !countryRef.current.contains(e.target as Node)) setCountryOpen(false);
       if (provinceRef.current && !provinceRef.current.contains(e.target as Node)) setProvinceOpen(false);
       if (cityRef.current && !cityRef.current.contains(e.target as Node)) setCityOpen(false);
+      if (manualRef.current && !manualRef.current.contains(e.target as Node)) setManualOpen(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -197,13 +203,42 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
 
   function handleManualCityChange(val: string) {
     setManualCity(val);
-    if (val.trim()) {
-      const prov = provinces.find((p) => p.name === selectedProvince);
-      if (prov) {
-        const addr = `${val.trim()}, ${selectedProvince}, ${selectedCountry?.name}`;
-        onSelect(addr, prov.lat, prov.lng);
-      }
+    if (manualDebounce.current) clearTimeout(manualDebounce.current);
+    if (val.trim().length < 2) {
+      setManualResults([]);
+      setManualOpen(false);
+      return;
     }
+    manualDebounce.current = setTimeout(async () => {
+      setLoadingManual(true);
+      try {
+        const q = `${val.trim()}, ${selectedProvince}, ${selectedCountry?.name}`;
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?` +
+            new URLSearchParams({ q, format: "json", addressdetails: "1", limit: "5", countrycodes: country }),
+          { headers: { "Accept-Language": "es" } }
+        );
+        const data: NominatimResult[] = await res.json();
+        const opts: GeoOption[] = data.map((r) => ({
+          name: r.display_name.split(",").slice(0, 2).join(",").trim(),
+          lat: parseFloat(r.lat),
+          lng: parseFloat(r.lon),
+        }));
+        setManualResults(opts);
+        setManualOpen(opts.length > 0);
+      } catch {
+        setManualResults([]);
+      }
+      setLoadingManual(false);
+    }, 400);
+  }
+
+  function handleManualSelect(opt: GeoOption) {
+    setManualCity(opt.name);
+    setManualOpen(false);
+    setManualResults([]);
+    const addr = `${opt.name}, ${selectedProvince}, ${selectedCountry?.name}`;
+    onSelect(addr, opt.lat, opt.lng);
   }
 
   // Admin text search handlers
@@ -318,20 +353,41 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
 
           {/* City / Town — dropdown or manual input fallback */}
           {citiesFailed && selectedProvince ? (
-            <div className="relative">
+            <div ref={manualRef} className="relative">
               <div className="flex items-center gap-3 w-full px-4 py-2.5 bg-[#0A0A0A] border border-[#2A2A2A] rounded-xl">
                 <svg className="w-4 h-4 text-[#D4AF37] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 <input
                   type="text"
                   value={manualCity}
                   onChange={(e) => handleManualCityChange(e.target.value)}
+                  onFocus={() => manualResults.length > 0 && setManualOpen(true)}
                   placeholder={t("selectCity", lang)}
                   className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 outline-none"
                 />
+                {loadingManual && (
+                  <div className="flex-shrink-0"><Spinner /></div>
+                )}
               </div>
+              {manualOpen && (
+                <div className={dropdownListClass}>
+                  {manualResults.map((r, i) => (
+                    <button
+                      key={`${r.name}-${i}`}
+                      type="button"
+                      onClick={() => handleManualSelect(r)}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 text-white hover:bg-[#1A1A1A] active:bg-[#1A1A1A]"
+                    >
+                      <svg className="w-4 h-4 text-[#D4AF37] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-sm flex-1 truncate">{r.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div ref={cityRef} className="relative">
