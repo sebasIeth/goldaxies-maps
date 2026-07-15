@@ -36,8 +36,52 @@ export default function CommerceCard({
   onNavigate,
   onClose,
 }: Props) {
+  const [expanded, setExpanded] = useState(false);
   const [lightbox, setLightbox] = useState(false);
 
+  // Collapsed bubble
+  if (!expanded) {
+    return (
+      <div className="fixed top-3 left-3 right-3 z-[1000] safe-top">
+        <div className="mx-auto max-w-lg flex items-center gap-2">
+          {/* Bubble card */}
+          <button
+            onClick={() => setExpanded(true)}
+            className="flex-1 flex items-center gap-3 bg-[#141414]/95 backdrop-blur-sm border border-[#2A2A2A] rounded-full px-3 py-2 shadow-lg active:scale-[0.98] transition-transform text-left"
+          >
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-[#0A0A0A] border border-[#2A2A2A] flex-shrink-0 relative">
+              <Image src={commerce.image || commerce.logo} alt={commerce.name} fill className="object-cover" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-white text-sm font-semibold truncate">{commerce.name}</h3>
+              <div className="flex items-center gap-2 text-[11px]">
+                <span className="text-gray-500 truncate">{commerce.type}</span>
+                {distanceKm !== null && (
+                  <span className="text-[#D4AF37] font-semibold flex-shrink-0">{formatDistance(distanceKm)}</span>
+                )}
+                {route && (
+                  <span className="text-[#D4AF37] font-semibold flex-shrink-0">{formatDuration(route.durationMin)}</span>
+                )}
+              </div>
+            </div>
+            <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Close */}
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-[#141414]/95 backdrop-blur-sm border border-[#2A2A2A] flex items-center justify-center text-gray-500 active:text-white transition-colors shadow-lg flex-shrink-0 text-xs"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Expanded card
   return (
     <div className="fixed top-0 left-0 right-0 z-[1000] p-3 pt-[env(safe-area-inset-top,12px)]">
       {/* Lightbox */}
@@ -51,10 +95,18 @@ export default function CommerceCard({
       )}
 
       <div className="mx-auto max-w-lg bg-[#141414] border border-[#2A2A2A] rounded-2xl shadow-2xl overflow-hidden relative">
-        {/* Close button (over image) */}
-        <button onClick={onClose} className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-gray-500 active:text-white transition-colors text-xs">
-          ✕
-        </button>
+        {/* Collapse / Close buttons */}
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+          <button onClick={() => setExpanded(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-gray-500 active:text-white transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-[#1A1A1A]/80 backdrop-blur-sm border border-[#2A2A2A] text-gray-500 active:text-white transition-colors text-xs">
+            ✕
+          </button>
+        </div>
+
         {/* Commerce image banner */}
         {commerce.image && (
           <div className="relative w-full h-36 cursor-pointer" onClick={() => setLightbox(true)}>
@@ -62,6 +114,7 @@ export default function CommerceCard({
             <div className="absolute inset-0 bg-gradient-to-t from-[#141414] to-transparent" />
           </div>
         )}
+
         {/* Header */}
         <div className={`flex items-center justify-between px-4 pb-2 ${commerce.image ? "-mt-8 relative z-10" : "pt-4"}`}>
           <div className="flex items-center gap-3">
