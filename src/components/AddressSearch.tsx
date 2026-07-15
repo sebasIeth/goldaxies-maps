@@ -85,6 +85,7 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
   const [loadingCities, setLoadingCities] = useState(false);
   const [citiesFailed, setCitiesFailed] = useState(false);
   const [manualCity, setManualCity] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
   const [manualResults, setManualResults] = useState<GeoOption[]>([]);
   const [manualOpen, setManualOpen] = useState(false);
   const [loadingManual, setLoadingManual] = useState(false);
@@ -92,6 +93,7 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
   const manualDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const provinceRef = useRef<HTMLDivElement>(null);
   const cityRef = useRef<HTMLDivElement>(null);
+  const cityFilterRef = useRef<HTMLInputElement>(null);
 
   // Text search state (admin)
   const [query, setQuery] = useState(value);
@@ -393,7 +395,7 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
             <div ref={cityRef} className="relative">
               <button
                 type="button"
-                onClick={() => cities.length > 0 && setCityOpen((v) => !v)}
+                onClick={() => { if (cities.length > 0) { setCityOpen((v) => { if (v) setCityFilter(""); return !v; }); } }}
                 disabled={cities.length === 0 && !loadingCities}
                 className={`${dropdownBtnClass} ${selectedCity ? "text-white" : "text-gray-500"} disabled:opacity-40 disabled:cursor-not-allowed`}
               >
@@ -408,11 +410,29 @@ export default function AddressSearch({ value, onSelect, onReset, showCountrySel
               </button>
               {cityOpen && (
                 <div className={dropdownListClass}>
-                  {cities.map((c, i) => (
+                  <div className="sticky top-0 bg-[#0E0E0E] border-b border-[#2A2A2A] px-3 py-2">
+                    <div className="flex items-center gap-2 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-3 py-1.5">
+                      <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <input
+                        ref={cityFilterRef}
+                        type="text"
+                        value={cityFilter}
+                        onChange={(e) => setCityFilter(e.target.value)}
+                        placeholder={lang === "es" ? "Buscar..." : "Search..."}
+                        className="flex-1 bg-transparent text-white text-xs placeholder-gray-500 outline-none"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  {cities
+                    .filter((c) => !cityFilter || c.name.toLowerCase().includes(cityFilter.toLowerCase()))
+                    .map((c, i) => (
                     <button
                       key={`${c.name}-${i}`}
                       type="button"
-                      onClick={() => handleCitySelect(c)}
+                      onClick={() => { handleCitySelect(c); setCityFilter(""); }}
                       className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors border-b border-[#1A1A1A] last:border-b-0 ${
                         c.name === selectedCity ? "bg-[#D4AF37]/10 text-[#D4AF37]" : "text-white hover:bg-[#1A1A1A] active:bg-[#1A1A1A]"
                       }`}
