@@ -84,13 +84,6 @@ export default function LocationPermission({ onSetLocation, onSkip, lang, onLang
 
         <AddressSearch value={address} onSelect={handleSelect} onReset={handleReset} showCountrySelect cascading lang={lang} />
 
-        {coords && (
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <p className="text-[11px] text-gray-500">{t("locationFound", lang)}</p>
-          </div>
-        )}
-
         <div className="space-y-2">
           <button
             onClick={handleConfirm}
