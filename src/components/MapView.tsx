@@ -221,6 +221,14 @@ export default function MapView() {
         />
       )}
 
+      {/* Coming soon banner */}
+      {!showOnboarding && !selected && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[800] bg-[#141414]/95 backdrop-blur-sm border border-[#D4AF37]/30 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 safe-top">
+          <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse" />
+          <span className="text-xs font-semibold text-[#D4AF37] whitespace-nowrap">Coming soon: Pay with AABBG</span>
+        </div>
+      )}
+
       {/* Loading route */}
       {loadingRoute && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-[#D4AF37] text-black px-4 py-2 rounded-xl text-xs font-semibold shadow-lg flex items-center gap-2">
