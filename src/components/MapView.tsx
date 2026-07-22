@@ -223,8 +223,10 @@ export default function MapView() {
 
       {/* Coming soon banner */}
       {!showOnboarding && !selected && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[800] bg-[#141414]/95 backdrop-blur-sm border border-[#D4AF37]/30 px-5 py-2.5 rounded-full shadow-lg safe-top">
-          <span className="text-xs font-semibold text-[#D4AF37] whitespace-nowrap">Coming soon: Pay with AABBG</span>
+        <div className="absolute top-4 left-0 right-0 z-[800] flex justify-center px-16 safe-top">
+          <div className="bg-[#141414]/95 backdrop-blur-sm border border-[#D4AF37]/30 px-5 py-2.5 rounded-full shadow-lg">
+            <span className="text-xs font-semibold text-[#D4AF37] whitespace-nowrap">Coming soon: Pay with AABBG</span>
+          </div>
         </div>
       )}
 
